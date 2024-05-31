@@ -23,17 +23,17 @@ const Layout = () => {
       <Tabs.Screen
         name="whishlists"
         options={{
-          tabBarLabel: 'Wishlists',
+          tabBarLabel: 'My Listings',
           tabBarIcon: ({ size, color }) => (
-            <Ionicons name="heart-outline" size={size} color={color} />
+            <Ionicons name="briefcase-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="trips"
         options={{
-          tabBarLabel: 'Trips',
-          tabBarIcon: ({ size, color }) => <FontAwesome5 name="airbnb" size={size} color={color} />,
+          tabBarLabel: 'Create',
+          tabBarIcon: ({ size, color }) => <Ionicons name="add" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -49,7 +49,6 @@ const Layout = () => {
         name="profile"
         options={{
           tabBarLabel: 'Profile',
-
           headerShown: false,
           tabBarIcon: ({ size, color }) => (
             <Ionicons name="person-circle-outline" size={size} color={color} />

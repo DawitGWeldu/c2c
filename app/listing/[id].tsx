@@ -105,20 +105,26 @@ const DetailsPage = () => {
             {listing.guests_included} guests · {listing.bedrooms} bedrooms · {listing.beds} bed ·{' '}
             {listing.bathrooms} bathrooms
           </Text>
-          <View style={{ flexDirection: 'row', gap: 4 }}>
-            <Ionicons name="star" size={16} />
-            <Text style={styles.ratings}>
-              {listing.review_scores_rating / 20} · {listing.number_of_reviews} reviews
-            </Text>
-          </View>
+
           <View style={styles.divider} />
 
           <View style={styles.hostView}>
             <Image source={{ uri: listing.host_picture_url }} style={styles.host} />
 
-            <View>
-              <Text style={{ fontWeight: '500', fontSize: 16 }}>Hosted by {listing.host_name}</Text>
-              <Text>Host since {listing.host_since}</Text>
+            <View >
+              <Text style={{ fontWeight: '500', fontSize: 16 }}>{listing.host_name}</Text>
+              <Text>Joined {listing.host_since}</Text>
+              <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                <Ionicons name="star" size={16} />
+                <Ionicons name="star" size={16} />
+                <Ionicons name="star" size={16} />
+                <Ionicons name="star" size={16} />
+                <Ionicons name="star-half-outline" size={16} />
+                <View style={styles.dividerVertical} />
+                <Text style={styles.ratings}>
+                  {listing.review_scores_rating / 20} · {listing.number_of_reviews} reviews
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -182,6 +188,12 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: Colors.grey,
     marginVertical: 16,
+  },
+  dividerVertical: {
+    width: StyleSheet.hairlineWidth,
+    height: 10,
+    backgroundColor: Colors.grey,
+    marginHorizontal: 16,
   },
   host: {
     width: 50,
