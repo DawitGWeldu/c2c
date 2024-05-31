@@ -51,7 +51,7 @@ const Page = () => {
   };
 
   return (
-    <BlurView intensity={70} style={styles.container} tint="light">
+    <View style={styles.container} >
       {/*  Where */}
       <View style={styles.card}>
         {openCard != 0 && (
@@ -233,7 +233,7 @@ const Page = () => {
           </TouchableOpacity>
         </View>
       </Animated.View>
-    </BlurView>
+    </View>
   );
 };
 
