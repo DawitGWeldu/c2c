@@ -27,7 +27,7 @@ const ListingsBottomSheet = ({ listings, category }: Props) => {
       index={1}
       snapPoints={snapPoints}
       enablePanDownToClose={false}
-      handleIndicatorStyle={{ backgroundColor: Colors.grey }}
+      handleIndicatorStyle={{ backgroundColor: Colors.dark }}
       style={styles.sheetContainer}>
       <BottomSheetView style={styles.contentContainer}>
           <Listings listings={listings} refresh={refresh} category={category} />

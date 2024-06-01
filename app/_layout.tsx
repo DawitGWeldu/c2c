@@ -107,7 +107,7 @@ function RootLayoutNav() {
               onPress={() => router.back()}
               style={{
                 backgroundColor: '#fff',
-                borderColor: Colors.grey,
+                borderColor: Colors.gray,
                 borderRadius: 20,
                 borderWidth: 1,
                 padding: 4,

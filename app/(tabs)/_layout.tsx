@@ -37,8 +37,9 @@ const Layout = () => {
         }}
       />
       <Tabs.Screen
-        name="inbox"
+        name="chats"
         options={{
+          headerShown: false,
           tabBarLabel: 'Inbox',
           tabBarIcon: ({ size, color }) => (
             <MaterialCommunityIcons name="message-outline" size={size} color={color} />

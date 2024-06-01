@@ -2,7 +2,7 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 import React, { useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity, Share } from 'react-native';
 import listingsData from '@/assets/data/airbnb-listings.json';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import Animated, {
   SlideInDown,
@@ -12,6 +12,8 @@ import Animated, {
   useScrollViewOffset,
 } from 'react-native-reanimated';
 import { defaultStyles } from '@/constants/Styles';
+import MapView from 'react-native-map-clustering';
+import { Marker } from 'react-native-maps';
 
 const { width } = Dimensions.get('window');
 const IMG_HEIGHT = 300;
@@ -96,54 +98,79 @@ const DetailsPage = () => {
           resizeMode="cover"
         />
 
-        <View style={styles.infoContainer}>
-          <Text style={styles.name}>{listing.name}</Text>
-          <Text style={styles.location}>
-            {listing.room_type} in {listing.smart_location}
-          </Text>
-          <Text style={styles.rooms}>
-            {listing.guests_included} guests · {listing.bedrooms} bedrooms · {listing.beds} bed ·{' '}
-            {listing.bathrooms} bathrooms
-          </Text>
+<View style={styles.infoContainer}>
+        <Text style={styles.name}>{listing.name}</Text>
+        <Text style={styles.location}>
+          {listing.room_type} in {listing.smart_location}
+        </Text>
+        <Text style={styles.rooms}>
+          {listing.guests_included} guests · {listing.bedrooms} bedrooms · {listing.beds} bed ·{' '}
+          {listing.bathrooms} bathrooms
+        </Text>
 
-          <View style={styles.divider} />
+        {/* <ListingPickUpLocation latitude={listing.latitude} longitude={listing.longitude}/> */}
 
-          <View style={styles.hostView}>
-            <Image source={{ uri: listing.host_picture_url }} style={styles.host} />
 
-            <View >
-              <Text style={{ fontWeight: '500', fontSize: 16 }}>{listing.host_name}</Text>
-              <Text>Joined {listing.host_since}</Text>
-              <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-                <Ionicons name="star" size={16} />
-                <Ionicons name="star" size={16} />
-                <Ionicons name="star" size={16} />
-                <Ionicons name="star" size={16} />
-                <Ionicons name="star-half-outline" size={16} />
-                <View style={styles.dividerVertical} />
-                <Text style={styles.ratings}>
-                  {listing.review_scores_rating / 20} · {listing.number_of_reviews} reviews
-                </Text>
-              </View>
+
+        <View style={styles.divider} />
+        </View>
+        <View style={styles.hostView}>
+          <Image source={{ uri: listing.host_picture_url }} style={styles.host} />
+
+          <View>
+            <Text style={{ fontFamily: 'mon-sb', fontSize: 16, color: Colors.muted }}>{listing.host_name}</Text>
+            <Text style={{ color: Colors.muted }}>Joined {listing.host_since}</Text>
+            <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+              <Ionicons name="star" size={16} />
+              <Ionicons name="star" size={16} />
+              <Ionicons name="star" size={16} />
+              <Ionicons name="star" size={16} />
+              <Ionicons name="star-half-outline" size={16} />
+              <View style={styles.dividerVertical} />
+              <Text style={styles.ratings}>
+                {listing.review_scores_rating / 20} · {listing.number_of_reviews} reviews
+              </Text>
             </View>
           </View>
+        </View>
+
+        <View style={styles.infoContainer}>
+          <Text numberOfLines={5} style={styles.description}>{listing.description}</Text>
 
           <View style={styles.divider} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 4 }}>
+            <MaterialIcons name='location-searching' size={18} />
+            <Text style={{ fontFamily: 'mon-sb', fontSize: 18 }}>Pickup Location</Text>
 
-          <Text style={styles.description}>{listing.description}</Text>
+          </View>
+          <View style={{ width: Dimensions.get('window').width - 48, height: 250 }}>
+            <MapView
+              // scrollEnabled={false}
+              rotateEnabled={false}
+              animationEnabled={false}
+              style={StyleSheet.absoluteFillObject}
+              initialRegion={{ latitude: parseFloat(listing.latitude), longitude: parseFloat(listing.longitude), latitudeDelta: 0.1, longitudeDelta: 0.1 }}>
+              <Marker
+                coordinate={{
+                  latitude: 52.499586830677025,
+                  longitude: 13.34589882667451,
+                }}
+              />
+            </MapView>
+          </View>
         </View>
       </Animated.ScrollView>
 
       <Animated.View style={defaultStyles.footer} entering={SlideInDown.delay(200)}>
         <View
           style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <TouchableOpacity style={styles.footerText}>
-            <Text style={styles.footerPrice}>€{listing.price}</Text>
-            <Text>night</Text>
-          </TouchableOpacity>
+          <View style={styles.footerText && { flexDirection: 'column', alignItems: 'flex-start' }}>
+            <Text style={styles.footerPrice}>{listing.price} kg</Text>
+            <Text style={{ fontFamily: 'mon', fontSize: 10 }}>Remaining Bagage Allowance </Text>
+          </View>
 
           <TouchableOpacity style={[defaultStyles.btn, { paddingRight: 20, paddingLeft: 20 }]}>
-            <Text style={defaultStyles.btnText}>Reserve</Text>
+            <Text style={defaultStyles.btnText}>Interested <Ionicons name='hand-left' size={14} /></Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -176,7 +203,7 @@ const styles = StyleSheet.create({
   },
   rooms: {
     fontSize: 16,
-    color: Colors.grey,
+    color: Colors.gray,
     marginVertical: 4,
     fontFamily: 'mon',
   },
@@ -186,25 +213,28 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.grey,
-    marginVertical: 16,
+    backgroundColor: Colors.gray,
   },
   dividerVertical: {
     width: StyleSheet.hairlineWidth,
     height: 10,
-    backgroundColor: Colors.grey,
-    marginHorizontal: 16,
+    backgroundColor: Colors.gray,
+    marginHorizontal: 4,
   },
   host: {
     width: 50,
     height: 50,
     borderRadius: 50,
-    backgroundColor: Colors.grey,
+    backgroundColor: Colors.gray,
   },
   hostView: {
+    resizeMode: 'cover',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    padding: 10,
+    borderRadius: 6,
+    backgroundColor: 'rgba(22, 22, 22, 0.1)'
   },
   footerText: {
     height: '100%',
@@ -236,7 +266,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     height: 100,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.grey,
+    borderColor: Colors.gray,
   },
 
   description: {

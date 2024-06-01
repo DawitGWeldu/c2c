@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, ListRenderItem, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ListRenderItem, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { defaultStyles } from '@/constants/Styles';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { useEffect, useRef, useState } from 'react';
 import { BottomSheetFlatList, BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
+import Colors from '@/constants/Colors';
 
 interface Props {
   listings: any[];
@@ -45,18 +46,50 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
           <TouchableOpacity style={{ position: 'absolute', right: 30, top: 30 }}>
             <Ionicons name="heart-outline" size={24} color="#000" />
           </TouchableOpacity>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={{ fontSize: 16, fontFamily: 'mon-sb' }}>{item.name}</Text>
-            <View style={{ flexDirection: 'row', gap: 4 }}>
-              <Ionicons name="star" size={16} />
-              <Text style={{ fontFamily: 'mon-sb' }}>{item.review_scores_rating / 20}</Text>
+          
+          <View style={{ flex: 1, padding: 8, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 6 }}>
+            <Text numberOfLines={1} ellipsizeMode='tail' style={{ width: 220, fontSize: 16, fontFamily: 'mon-sb' }}>{item.name}</Text>
+            <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+              <Text style={{ fontFamily: 'mon' }}>{item.calendar_updated}</Text>
             </View>
           </View>
-          <Text style={{ fontFamily: 'mon' }}>{item.room_type}</Text>
-          <View style={{ flexDirection: 'row', gap: 4 }}>
-            <Text style={{ fontFamily: 'mon-sb' }}>€ {item.price}</Text>
-            <Text style={{ fontFamily: 'mon' }}>night</Text>
+
+
+          <View style={{flexDirection: 'row', padding: 6, position: 'absolute', left: 15, bottom: 122, backgroundColor: 'rgba(20, 20, 20, 0.3)' }}>
+            <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+              <MaterialIcons name="scale" style={{color: '#fff'}} size={16} />
+
+              <Text style={{ fontFamily: 'mon', color: '#fff'}}>{item.price} kg</Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 4 }}>
+              <Ionicons name="airplane" style={{color: '#fff'}} size={16} />
+              <Text style={{ fontFamily: 'mon', color: '#fff' }}>{item.room_type}</Text>
+            </View>
           </View>
+
+          <View style={styles.hostView}>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Image source={{ uri: item.host_picture_url }} style={styles.host} />
+
+              <View style={{ flexDirection: 'column' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}>{item.host_name}</Text>
+                  <Ionicons name='checkmark-circle' size={16} style={{color: '#0096FF'}} />
+                </View>
+                <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Ionicons name='star' />
+                  <Text style={styles.ratings}>
+                    {item.review_scores_rating / 20} ·
+                  </Text>
+                  <Text>{item.number_of_reviews} reviews</Text>
+                </View>
+              </View>
+            </View>
+
+
+          </View>
+
         </Animated.View>
       </TouchableOpacity>
     </Link>
@@ -77,13 +110,13 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
 const styles = StyleSheet.create({
   listing: {
     padding: 16,
-    gap: 10,
     marginVertical: 16,
   },
   image: {
     width: '100%',
     height: 300,
-    borderRadius: 10,
+    borderTopRightRadius: 10,
+    borderTopLeftRadius: 10,
   },
   info: {
     textAlign: 'center',
@@ -91,6 +124,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 4,
   },
+  host: {
+    width: 50,
+    height: 50,
+    borderRadius: 50,
+    backgroundColor: Colors.gray,
+  },
+  hostView: {
+    backgroundColor: 'rgba(20, 20, 20, 0.05)',
+    padding: 8,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  dividerVertical: {
+    width: StyleSheet.hairlineWidth,
+    height: 10,
+    backgroundColor: Colors.gray,
+    marginHorizontal: 16,
+  },
+  ratings: {
+    fontSize: 16,
+    fontFamily: 'mon-sb',
+  }
 });
 
 export default Listings;

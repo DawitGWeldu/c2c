@@ -39,7 +39,12 @@ export const defaultStyles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderTopColor: Colors.grey,
+    borderTopColor: Colors.gray,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Colors.lightGray,
+    marginLeft: 50,
+  }
 });
