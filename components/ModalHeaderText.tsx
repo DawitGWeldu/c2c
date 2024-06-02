@@ -11,7 +11,7 @@ const ModalHeaderText = () => {
           style={{
             fontFamily: 'mon-sb',
             fontSize: 18,
-            color: active == 0 ? '#000' : Colors.grey,
+            color: active == 0 ? '#000' : Colors.gray,
             textDecorationLine: active == 0 ? 'underline' : 'none',
           }}>
           Stays
@@ -22,7 +22,7 @@ const ModalHeaderText = () => {
           style={{
             fontFamily: 'mon-sb',
             fontSize: 18,
-            color: active == 1 ? '#000' : Colors.grey,
+            color: active == 1 ? '#000' : Colors.gray,
             textDecorationLine: active == 1 ? 'underline' : 'none',
           }}>
           Experiences

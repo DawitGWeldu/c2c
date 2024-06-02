@@ -6,8 +6,13 @@ import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import ModalHeaderText from '@/components/ModalHeaderText';
-import { TouchableOpacity, SafeAreaView } from 'react-native';
+import { TouchableOpacity, SafeAreaView, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+import { TamaguiProvider } from 'tamagui'
+
+import { tamaguiConfig } from '../tamagui.config'
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 // Cache the Clerk JWT
@@ -53,11 +58,17 @@ export default function RootLayout() {
     return null;
   }
 
+
+  
   return (
 
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY!} tokenCache={tokenCache}>
-          <RootLayoutNav />
+        <TamaguiProvider config={tamaguiConfig}>
+          <ThemeProvider value={DefaultTheme}>
+            <RootLayoutNav />
+          </ThemeProvider>
+        </TamaguiProvider>
       </ClerkProvider>
     </GestureHandlerRootView>
 
@@ -76,7 +87,6 @@ function RootLayoutNav() {
   }, [isLoaded]);
 
   return (
-    
     <Stack>
       <Stack.Screen
         name="(modals)/login"

@@ -98,43 +98,42 @@ const DetailsPage = () => {
           resizeMode="cover"
         />
 
-<View style={styles.infoContainer}>
-        <Text style={styles.name}>{listing.name}</Text>
-        <Text style={styles.location}>
-          {listing.room_type} in {listing.smart_location}
-        </Text>
-        <Text style={styles.rooms}>
-          {listing.guests_included} guests · {listing.bedrooms} bedrooms · {listing.beds} bed ·{' '}
-          {listing.bathrooms} bathrooms
-        </Text>
+        <View style={styles.infoContainer}>
+          <Text style={styles.name}>{listing.name}</Text>
+          <Text style={{fontFamily: 'mon-sb', fontSize: 15}}>
+            <Ionicons name='airplane' />
+            From {listing.smart_location} To Ethiopia
+          </Text>
+          <Text style={styles.rooms}>
+            Fragile · Non-Perishable 
+          </Text>
 
-        {/* <ListingPickUpLocation latitude={listing.latitude} longitude={listing.longitude}/> */}
+          {/* <ListingPickUpLocation latitude={listing.latitude} longitude={listing.longitude}/> */}
 
 
 
-        <View style={styles.divider} />
-        </View>
-        <View style={styles.hostView}>
-          <Image source={{ uri: listing.host_picture_url }} style={styles.host} />
+          {/* <View style={styles.divider} /> */}
+          <View style={styles.hostView}>
+            <Image source={{ uri: listing.host_picture_url }} style={styles.host} />
 
-          <View>
-            <Text style={{ fontFamily: 'mon-sb', fontSize: 16, color: Colors.muted }}>{listing.host_name}</Text>
-            <Text style={{ color: Colors.muted }}>Joined {listing.host_since}</Text>
-            <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-              <Ionicons name="star" size={16} />
-              <Ionicons name="star" size={16} />
-              <Ionicons name="star" size={16} />
-              <Ionicons name="star" size={16} />
-              <Ionicons name="star-half-outline" size={16} />
-              <View style={styles.dividerVertical} />
-              <Text style={styles.ratings}>
-                {listing.review_scores_rating / 20} · {listing.number_of_reviews} reviews
-              </Text>
+            <View>
+              <Text style={{ fontFamily: 'mon-sb', fontSize: 16, color: Colors.muted }}>{listing.host_name}</Text>
+              <Text style={{ color: Colors.muted }}>Joined {listing.host_since}</Text>
+              <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                <Ionicons name="star" size={16} />
+                <Ionicons name="star" size={16} />
+                <Ionicons name="star" size={16} />
+                <Ionicons name="star" size={16} />
+                <Ionicons name="star-half-outline" size={16} />
+                <View style={styles.dividerVertical} />
+                <Text style={styles.ratings}>
+                  {listing.review_scores_rating / 20} · {listing.number_of_reviews} reviews
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.infoContainer}>
+          <Text style={{fontFamily: 'mon-sb', fontSize: 15, paddingVertical: 6}}>Description</Text>
           <Text numberOfLines={5} style={styles.description}>{listing.description}</Text>
 
           <View style={styles.divider} />
@@ -152,8 +151,8 @@ const DetailsPage = () => {
               initialRegion={{ latitude: parseFloat(listing.latitude), longitude: parseFloat(listing.longitude), latitudeDelta: 0.1, longitudeDelta: 0.1 }}>
               <Marker
                 coordinate={{
-                  latitude: 52.499586830677025,
-                  longitude: 13.34589882667451,
+                  latitude: parseFloat(listing.latitude),
+                  longitude: parseFloat(listing.longitude),
                 }}
               />
             </MapView>
@@ -204,7 +203,7 @@ const styles = StyleSheet.create({
   rooms: {
     fontSize: 16,
     color: Colors.gray,
-    marginVertical: 4,
+    marginVertical: 8,
     fontFamily: 'mon',
   },
   ratings: {
@@ -214,12 +213,13 @@ const styles = StyleSheet.create({
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: Colors.gray,
+    marginVertical: 8
   },
   dividerVertical: {
     width: StyleSheet.hairlineWidth,
     height: 10,
     backgroundColor: Colors.gray,
-    marginHorizontal: 4,
+    marginHorizontal: 6,
   },
   host: {
     width: 50,
@@ -228,12 +228,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gray,
   },
   hostView: {
-    resizeMode: 'cover',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     padding: 10,
     borderRadius: 6,
+    marginBottom: 6,
     backgroundColor: 'rgba(22, 22, 22, 0.1)'
   },
   footerText: {
