@@ -18,12 +18,12 @@ const categories = [
     icon: 'local-fire-department',
   },
   {
-    name: 'Play',
+    name: 'Electronics',
     icon: 'videogame-asset',
   },
   {
-    name: 'City',
-    icon: 'apartment',
+    name: 'Equipment',
+    icon: 'house',
   },
   {
     name: 'Beachfront',
@@ -64,7 +64,7 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
                 <Ionicons name="search" size={24} />
                 <View>
                   <Text style={{ fontFamily: 'mon-sb' }}>Where to?</Text>
-                  <Text style={{ color: Colors.grey, fontFamily: 'mon' }}>Anywhere · Any week</Text>
+                  <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -94,7 +94,7 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
                 <MaterialIcons
                   name={item.icon as any}
                   size={24}
-                  color={activeIndex === index ? '#000' : Colors.grey}
+                  color={activeIndex === index ? '#000' : Colors.gray}
                 />
                 <Text style={activeIndex === index ? styles.categoryTextActive : styles.categoryText}>
                   {item.name}
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 14,
     fontFamily: 'mon-sb',
-    color: Colors.grey,
+    color: Colors.gray,
   },
   categoryTextActive: {
     fontSize: 14,

@@ -63,7 +63,7 @@ const Layout = () => {
                 }}
                 style={{ width: 40, height: 40, borderRadius: 50 }}
               />
-              <Text style={{ fontSize: 16, fontWeight: '500' }}>Simon Grimm</Text>
+              <Text style={{ fontSize: 16, fontWeight: '500' }}>Abebe Bekelle</Text>
             </View>
           ),
           headerRight: () => (

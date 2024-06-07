@@ -4,8 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { View, StyleSheet, TextInput, Text, TouchableOpacity } from 'react-native';
 
-// https://github.com/clerkinc/clerk-expo-starter/blob/main/components/OAuth.tsx
-import { useWarmUpBrowser } from '@/hooks/useWarmUpBrowser';
 import { defaultStyles } from '@/constants/Styles';
 
 enum Strategy {
@@ -14,7 +12,6 @@ enum Strategy {
   Facebook = 'oauth_facebook',
 }
 const Page = () => {
-  useWarmUpBrowser();
 
   const router = useRouter();
   const { startOAuthFlow: googleAuth } = useOAuth({ strategy: 'oauth_google' });
@@ -112,13 +109,13 @@ const styles = StyleSheet.create({
   },
   seperator: {
     fontFamily: 'mon-sb',
-    color: Colors.grey,
+    color: Colors.gray,
     fontSize: 16,
   },
   btnOutline: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: Colors.grey,
+    borderColor: Colors.gray,
     height: 50,
     borderRadius: 8,
     alignItems: 'center',

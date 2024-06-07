@@ -106,7 +106,7 @@ const Page = () => {
               entering={FadeIn.duration(200)}
               exiting={FadeOut.duration(200)}>
               <Text style={styles.previewText}>When</Text>
-              <Text style={styles.previewdData}>Any week</Text>
+              <Text style={styles.previewdData}>Any Time</Text>
             </AnimatedTouchableOpacity>
           )}
 
