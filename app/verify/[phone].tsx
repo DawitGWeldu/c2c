@@ -95,7 +95,7 @@ const Page = () => {
 
       <Link href={'/login'} replace asChild>
         <TouchableOpacity>
-          <Text style={[defaultStyles.textLink]}>Already have an account? Log in</Text>
+          <Text style={{fontFamily: 'mon-sb'}}>Already have an account? Log in</Text>
         </TouchableOpacity>
       </Link>
     </View>

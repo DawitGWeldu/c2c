@@ -23,7 +23,8 @@ enum SignInType {
 }
 
 const Page = () => {
-  const [countryCode, setCountryCode] = useState('+49');
+  const [countryCode, setCountryCode] = useState('+251');
+  const [countryFlag, setCountryFlag] = useState('ET');
   const [phoneNumber, setPhoneNumber] = useState('');
   const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0;
   const router = useRouter();
@@ -68,31 +69,34 @@ const Page = () => {
       style={{ flex: 1 }}
       behavior="padding"
       keyboardVerticalOffset={keyboardVerticalOffset}>
-      <View style={defaultStyles.container}>
-        <Text style={defaultStyles.header}>Welcome back</Text>
+      <View style={{ flex: 1, padding: 20 }}>
+        <Text style={defaultStyles.header}>Welcome</Text>
         <Text style={defaultStyles.descriptionText}>
-          Enter the phone number associated with your account
+          Enter your phone number to login to your account
         </Text>
         <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Country code"
-            placeholderTextColor={Colors.gray}
-            value={countryCode}
-          />
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="Mobile number"
-            placeholderTextColor={Colors.gray}
-            keyboardType="numeric"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-          />
+          <TouchableOpacity
+            style={[styles.input, { width: 60, flexDirection: 'row', alignItems: 'center', gap: 4 }]}
+          >
+            <Ionicons name='flag' size={25} />
+            <Ionicons name='chevron-down' />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              autoFocus={true}
+              style={[styles.input]}
+              placeholder="Mobile number"
+              placeholderTextColor={Colors.gray}
+              keyboardType="numeric"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+            />
+          </View>
         </View>
 
         <TouchableOpacity
           style={[
-            defaultStyles.pillButton,
+            defaultStyles.btn,
             phoneNumber !== '' ? styles.enabled : styles.disabled,
             { marginBottom: 20 },
           ]}
@@ -110,20 +114,6 @@ const Page = () => {
           />
         </View>
 
-        <TouchableOpacity
-          onPress={() => onSignIn(SignInType.Email)}
-          style={[
-            defaultStyles.pillButton,
-            {
-              flexDirection: 'row',
-              gap: 16,
-              marginTop: 20,
-              backgroundColor: '#fff',
-            },
-          ]}>
-          <Ionicons name="mail" size={24} color={'#000'} />
-          <Text style={[defaultStyles.buttonText, { color: '#000' }]}>Continue with email </Text>
-        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => onSignIn(SignInType.Google)}
@@ -137,23 +127,9 @@ const Page = () => {
             },
           ]}>
           <Ionicons name="logo-google" size={24} color={'#000'} />
-          <Text style={[defaultStyles.buttonText, { color: '#000' }]}>Continue with email </Text>
+          <Text style={[defaultStyles.buttonText, { color: '#000' }]}>Don't have an account? Register</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => onSignIn(SignInType.Apple)}
-          style={[
-            defaultStyles.pillButton,
-            {
-              flexDirection: 'row',
-              gap: 16,
-              marginTop: 20,
-              backgroundColor: '#fff',
-            },
-          ]}>
-          <Ionicons name="logo-apple" size={24} color={'#000'} />
-          <Text style={[defaultStyles.buttonText, { color: '#000' }]}>Continue with email </Text>
-        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -165,9 +141,9 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: Colors.lightGray,
-    padding: 20,
-    borderRadius: 16,
-    fontSize: 20,
+    padding: 10,
+    borderRadius: 10,
+    fontSize: 16,
     marginRight: 10,
   },
   enabled: {

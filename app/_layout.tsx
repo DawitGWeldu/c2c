@@ -1,5 +1,5 @@
 import { useFonts } from 'expo-font';
-import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
+import { Link, SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
@@ -41,7 +41,7 @@ export {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {  
+export default function RootLayout() {
   return (
 
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -80,14 +80,14 @@ function RootLayoutNav() {
     }
   }, [loaded]);
 
-  
+
   useEffect(() => {
     if (!isLoaded) return;
 
     const inAuthGroup = segments[0] === '(authenticated)';
 
     if (isSignedIn && !inAuthGroup) {
-      router.replace('/(authenticated)/(tabs)/home');
+      router.replace('/(authenticated)/(tabs)');
     } else if (!isSignedIn) {
       router.replace('/');
     }
@@ -101,28 +101,68 @@ function RootLayoutNav() {
     );
   }
 
-  
+
 
   return (
     <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen
-        name="(modals)/login"
+        name="signup"
         options={{
-          title: 'Log in or sign up',
-          headerTitleStyle: {
-            fontFamily: 'mon-sb',
-          },
+          title: '',
+          headerBackTitle: '',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: Colors.background },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="close-outline" size={28} />
+            <TouchableOpacity onPress={router.back}>
+              <Ionicons name="arrow-back" size={34} color={Colors.dark} />
             </TouchableOpacity>
           ),
         }}
       />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="listing/[id]" options={{ headerTitle: '' }} />
+
       <Stack.Screen
-        name="(modals)/booking"
+        name="login"
+        options={{
+          title: '',
+          headerBackTitle: '',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: Colors.background },
+          headerLeft: () => (
+            <TouchableOpacity onPress={router.back}>
+              <Ionicons name="arrow-back" size={34} color={Colors.dark} />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <Link href={'/help'} asChild>
+              <TouchableOpacity>
+                <Ionicons name="help-circle-outline" size={34} color={Colors.dark} />
+              </TouchableOpacity>
+            </Link>
+          ),
+        }}
+      />
+
+      <Stack.Screen name="help" options={{ title: 'Help', presentation: 'modal' }} />
+
+      <Stack.Screen
+        name="verify/[phone]"
+        options={{
+          title: '',
+          headerBackTitle: '',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: Colors.background },
+          headerLeft: () => (
+            <TouchableOpacity onPress={router.back}>
+              <Ionicons name="arrow-back" size={34} color={Colors.dark} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Stack.Screen name="(authenticated)/(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(authenticated)/listing/[id]" options={{ headerTitle: '' }} />
+      <Stack.Screen
+        name="(authenticated)/(modals)/booking"
         options={{
           presentation: 'transparentModal',
           animation: 'fade',
