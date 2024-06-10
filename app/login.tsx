@@ -18,16 +18,19 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 
 import PhoneInput, {
   ICountry,
 } from 'react-native-international-phone-number';
+import { useAuth } from './context/AuthContext';
 
 
 const Page = () => {
-  const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0;
-  const router = useRouter();
+  const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0
+  const router = useRouter()
+  const { onLogin } = useAuth()
 
   const [selectedCountry, setSelectedCountry] = useState<
     undefined | ICountry
@@ -48,19 +51,13 @@ const Page = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${baseUrl}/api/signin`, {
-        phoneNumber,
-        password
-      });
-
-      if (response.status === 200) {
-        alert(` You have created: ${JSON.stringify(response.data)}`);
-        setIsLoading(false);
-        setPhoneNumber("");
-        setPassword("");
-      } else {
-        throw new Error("An error has occurred");
-      }
+      const result = await onLogin!(phoneNumber, password)
+      console.log(result)
+      // if (result.status === 200) {
+      //   setIsLoading(false);
+      //   setPhoneNumber("");
+      //   setPassword("");
+      // }
     } catch (error) {
       alert("An error has occurred");
       setIsLoading(false);
@@ -118,7 +115,7 @@ const Page = () => {
             </View>
           </View> */}
 
-        <View style={{ width: '100%', marginVertical: 30 }}>
+        <View style={{ width: '100%', flexDirection: 'column', alignItems: 'center', gap: 8, marginVertical: 30 }}>
           <PhoneInput
             placeholder="Enter phone"
             phoneInputStyles={{
@@ -170,7 +167,6 @@ const Page = () => {
               countryButton: {
                 backgroundColor: Colors.gray,
                 marginVertical: 4,
-                paddingVertical: 0,
               },
               noCountryText: {},
               noCountryContainer: {},
@@ -193,6 +189,21 @@ const Page = () => {
             selectedCountry={selectedCountry}
             onChangeSelectedCountry={handleSelectedCountry}
           />
+          <TextInput style={{
+            backgroundColor: "#fff",
+            borderWidth: 1,
+            borderColor: Colors.lightGray,
+            color: Colors.dark,
+            width: '100%',
+            padding: 8,
+            paddingLeft: 16,
+            borderRadius: 8,
+          }} 
+          secureTextEntry={true} 
+          placeholder='password'
+          onChangeText={setPassword}
+          />
+
         </View>
 
         <TouchableOpacity

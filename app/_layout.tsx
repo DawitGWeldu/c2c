@@ -1,7 +1,6 @@
 import { useFonts } from 'expo-font';
-import { Link, SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
+import { Link, SplashScreen, Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
@@ -13,6 +12,7 @@ import { TamaguiProvider } from 'tamagui'
 
 import { tamaguiConfig } from '../tamagui.config'
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 // Cache the Clerk JWT
@@ -43,22 +43,24 @@ export default function RootLayout() {
   return (
 
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY!} tokenCache={tokenCache}>
-        <TamaguiProvider config={tamaguiConfig}>
-          <ThemeProvider value={DefaultTheme}>
+      <TamaguiProvider config={tamaguiConfig}>
+        <ThemeProvider value={DefaultTheme}>
+          <AuthProvider>
             <RootLayoutNav />
-          </ThemeProvider>
-        </TamaguiProvider>
-      </ClerkProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </TamaguiProvider>
     </GestureHandlerRootView>
 
   );
 }
 
 function RootLayoutNav() {
-  const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+  const { authState, onLogout } = useAuth()
+  const rootNavigationState = useRootNavigationState()
+  const isLoaded = rootNavigationState?.key != null
 
 
   const [loaded, error] = useFonts({
@@ -79,26 +81,30 @@ function RootLayoutNav() {
     }
   }, [loaded]);
 
+  useEffect(() => {
+    if (!loaded || !isLoaded) {
+      
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+    
+    }
+  }, [isLoaded]);
+
 
   useEffect(() => {
     if (!isLoaded) return;
 
     const inAuthGroup = segments[0] === '(authenticated)';
 
-    if (isSignedIn && !inAuthGroup) {
+    if (authState?.authenticated && !inAuthGroup) {
       router.replace('/(authenticated)/(tabs)');
-    } else if (!isSignedIn) {
+    } else if (!authState?.authenticated) {
       router.replace('/');
     }
-  }, [isSignedIn]);
+  }, [authState?.authenticated]);
 
-  if (!loaded || !isLoaded) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
-  }
+  
 
 
 

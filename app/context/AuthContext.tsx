@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import * as SecureStore from 'expo-secure-store'
 
@@ -8,7 +8,7 @@ interface AuthProps {
     onLogin?: (phoneNumber: string, password: string) => Promise<any>
     onLogout?: () => Promise<any>
 }
-const TOKEN_KEY = 'my-jwt'
+const TOKEN_KEY = 'auth-jwt'
 export const API_URL = 'http://localhost:5000'
 
 const AuthContext = createContext<AuthProps>({})
@@ -25,10 +25,69 @@ export const AuthProvider = ({ children }: any) => {
         token: null,
         authenticated: null
     })
+
+    useEffect(() => {
+      const loadToken = async () => {
+        const token =  await SecureStore.getItemAsync(TOKEN_KEY)
+
+        if(token){
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+            setAuthState({
+                token: token,
+                authenticated: true
+            })
+        }
+        
+      }
+
+      loadToken()
+    }, [])
     
     
+    const register = async (name: string, phoneNumber: string, password: string) => {
+        try {
+            return await axios.post(`${API_URL}/auth/register`, {name, phoneNumber, password})
+        } catch (error) {
+            return {error: true, msg: (error as any).response.data.msg}
+        }
+    }
+
+    const login = async (phoneNumber: string, password: string) => {
+        try {
+            const result = await axios.post(`${API_URL}/auth/register`, {phoneNumber, password})
+            setAuthState({
+                token: result.data.token,
+                authenticated: true
+            })
+
+            axios.defaults.headers.common['Authorization'] = `Bearer ${result.data.token}`
+
+            await SecureStore.setItemAsync(TOKEN_KEY, result.data.token)
+
+            return result
+
+        } catch (error) {
+            return {error: true, msg: (error as any).response.data.msg}
+        }
+    }
+
+    const logout = async () => {
+        await SecureStore.deleteItemAsync(TOKEN_KEY)
+
+        axios.defaults.headers.common['Authorization'] = ''
+
+        setAuthState({
+            token: null, 
+            authenticated: false
+        })
+    }
     
-    const value = {}
+    const value = {
+        onRegister: register,
+        onLogin: login,
+        onLogout: logout,
+        authState
+    }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
