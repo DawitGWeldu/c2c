@@ -34,11 +34,9 @@ const tokenCache = {
 };
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -64,6 +62,7 @@ function RootLayoutNav() {
 
 
   const [loaded, error] = useFonts({
+    'TwemojiMozilla': require('../assets/fonts/Montserrat-Regular.ttf'),
     mon: require('../assets/fonts/Montserrat-Regular.ttf'),
     'mon-sb': require('../assets/fonts/Montserrat-SemiBold.ttf'),
     'mon-b': require('../assets/fonts/Montserrat-Bold.ttf'),
@@ -144,6 +143,7 @@ function RootLayoutNav() {
       />
 
       <Stack.Screen name="help" options={{ title: 'Help', presentation: 'modal' }} />
+      <Stack.Screen name="(modals)/CountrySelect" options={{ title: 'Select Country', presentation: 'modal' }} />
 
       <Stack.Screen
         name="verify/[phone]"

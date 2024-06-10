@@ -31,7 +31,6 @@
         <data android:scheme="myapp"/>
         <data android:scheme="com.client.ecommapp"/>
         <data android:scheme="exp+c2c"/>
-        <data android:scheme="com.client.p2pecommerce"/>
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>

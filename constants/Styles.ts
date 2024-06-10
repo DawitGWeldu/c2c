@@ -48,7 +48,7 @@ export const defaultStyles = StyleSheet.create({
     marginLeft: 50,
   },
   header: {
-    fontSize: 40,
+    fontSize: 30,
     fontWeight: '700',
   },
   pillButton: {
@@ -59,13 +59,14 @@ export const defaultStyles = StyleSheet.create({
     alignItems: 'center',
   },
   descriptionText: {
+    fontFamily: 'mon',
     fontSize: 18,
     marginTop: 20,
     color: Colors.gray,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '500',
   },
   pillButtonSmall: {

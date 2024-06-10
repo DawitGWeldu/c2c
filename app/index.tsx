@@ -8,7 +8,8 @@ const Page = () => {
   return (
     <View style={styles.container}>
       <View style={{ marginTop: 80, padding: 20 }}>
-        <Text style={styles.header}>Ready to change the way you money?</Text>
+        <Text style={[styles.header, {color: Colors.dark}]}>WELCOME!</Text>
+        <Text style={[styles.header_light, {color: Colors.gray}]}> Log in or create an account to continue.</Text>
       </View>
 
       <View style={styles.buttons}>
@@ -45,6 +46,12 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 36,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    color: 'white',
+  },
+  header_light: {
+    fontSize: 28,
     fontWeight: '900',
     textTransform: 'uppercase',
     color: 'white',
