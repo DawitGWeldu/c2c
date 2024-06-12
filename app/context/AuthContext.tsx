@@ -9,7 +9,7 @@ interface AuthProps {
     onLogout?: () => Promise<any>
 }
 const TOKEN_KEY = 'auth-jwt'
-export const API_URL = 'http://localhost:5000'
+export const API_URL = 'http://192.168.137.1:5000'
 
 const AuthContext = createContext<AuthProps>({})
 
@@ -46,7 +46,8 @@ export const AuthProvider = ({ children }: any) => {
     
     const register = async (name: string, phoneNumber: string, password: string) => {
         try {
-            return await axios.post(`${API_URL}/auth/register`, {name, phoneNumber, password})
+            return await axios.post(`${API_URL}/auth/register`, {name, phone_number: phoneNumber, password})
+            // return await axios.get(`${API_URL}`)
         } catch (error) {
             return {error: true, msg: (error as any).response.data.msg}
         }
@@ -54,20 +55,21 @@ export const AuthProvider = ({ children }: any) => {
 
     const login = async (phoneNumber: string, password: string) => {
         try {
-            const result = await axios.post(`${API_URL}/auth/register`, {phoneNumber, password})
+            const {data }= await axios.post(`${API_URL}/auth/login`, {phone_number: phoneNumber, password})
+            // console.log(data)
             setAuthState({
-                token: result.data.token,
+                token: data.token,
                 authenticated: true
             })
 
-            axios.defaults.headers.common['Authorization'] = `Bearer ${result.data.token}`
+            axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
 
-            await SecureStore.setItemAsync(TOKEN_KEY, result.data.token)
+            await SecureStore.setItemAsync(TOKEN_KEY, data.token)
 
-            return result
+            return data
 
         } catch (error) {
-            return {error: true, msg: (error as any).response.data.msg}
+            return {error: true, msg: (error as any).response.data}
         }
     }
 

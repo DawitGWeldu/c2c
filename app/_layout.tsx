@@ -8,13 +8,10 @@ import ModalHeaderText from '@/components/ModalHeaderText';
 import { TouchableOpacity, SafeAreaView, useColorScheme, View, ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { TamaguiProvider } from 'tamagui'
+import { RootSiblingParent } from 'react-native-root-siblings';
 
-import { tamaguiConfig } from '../tamagui.config'
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 // Cache the Clerk JWT
 const tokenCache = {
   async getToken(key: string) {
@@ -43,14 +40,13 @@ export default function RootLayout() {
   return (
 
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <TamaguiProvider config={tamaguiConfig}>
-        <ThemeProvider value={DefaultTheme}>
-          <AuthProvider>
-            <RootLayoutNav />
-          </AuthProvider>
-        </ThemeProvider>
-      </TamaguiProvider>
+      <AuthProvider>
+        <RootSiblingParent>
+          <RootLayoutNav />
+        </RootSiblingParent>
+      </AuthProvider>
     </GestureHandlerRootView>
+
 
   );
 }
@@ -60,7 +56,6 @@ function RootLayoutNav() {
   const segments = useSegments();
   const { authState, onLogout } = useAuth()
   const rootNavigationState = useRootNavigationState()
-  const isLoaded = rootNavigationState?.key != null
 
 
   const [loaded, error] = useFonts({
@@ -82,18 +77,18 @@ function RootLayoutNav() {
   }, [loaded]);
 
   useEffect(() => {
-    if (!loaded || !isLoaded) {
-      
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
-    
+    if (!loaded) {
+
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+
     }
-  }, [isLoaded]);
+  }, [loaded]);
 
 
   useEffect(() => {
-    if (!isLoaded) return;
+    // if (!isLoaded) return;
 
     const inAuthGroup = segments[0] === '(authenticated)';
 
@@ -104,11 +99,12 @@ function RootLayoutNav() {
     }
   }, [authState?.authenticated]);
 
-  
+
 
 
 
   return (
+
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen

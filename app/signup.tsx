@@ -15,176 +15,207 @@ import {
   Platform,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
+
+import PhoneInput, {
+  ICountry,
+} from 'react-native-international-phone-number';
+import { useAuth } from './context/AuthContext';
+import axios from 'axios'
+
+
 const Page = () => {
-  const [countryCode, setCountryCode] = useState('+251');
-  const [countryFlag, setCountryFlag] = useState('ET');
-  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
   const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0;
   const router = useRouter();
 
-  const [selectedCountry, setSelectedCountry] = useState(0);
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const { onRegister } = useAuth()
 
-  const { signUp } = useSignUp();
+  const [selectedCountry, setSelectedCountry] = useState<
+    undefined | ICountry
+  >(undefined);
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
-
-
-  const toggleBottomSheet = () => {
-    if (bottomSheetOpen) {
-      bottomSheetRef.current?.close();
-      setBottomSheetOpen(false)
-
-    } else {
-      bottomSheetRef.current?.expand();
-      setBottomSheetOpen(true)
-
-    }
-    console.log(bottomSheetOpen)
-
+  function handlephoneNumber(phoneNumber: string) {
+    setPhoneNumber(phoneNumber);
   }
 
+  function handleSelectedCountry(country: ICountry) {
+    setSelectedCountry(country);
+  }
 
-
-  const onSignup = async () => {
-    const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+  const handleRegister = async () => {
+    setIsLoading(true);
 
     try {
-      await signUp!.create({
-        phoneNumber: fullPhoneNumber,
-      });
-      signUp!.preparePhoneNumberVerification();
+      const phoneNumberWithSpaces = `${selectedCountry?.callingCode + phoneNumber}`
+      const trimmedPhoneNumber = phoneNumberWithSpaces.replace(/\s/g, "");
+      const result = await onRegister!('Dave', trimmedPhoneNumber, password)
+      
 
-      router.push({ pathname: '/verify/[phone]', params: { phone: fullPhoneNumber } });
-    } catch (error) {
-      console.error('Error signing up:', error);
+      console.log("here: " + trimmedPhoneNumber + " " + password + " ---- " + JSON.stringify(result))
+      setIsLoading(false);
+
+      if (result.status === 200) {
+        setPhoneNumber("");
+        setPassword("");
+      }
+    } catch (e) {
+      console.log(e)
+      // alert("An error has occurred");
+      setIsLoading(false);
     }
   };
 
-  const Countries = [
-    { flag: 'ET', code: '+251', name: 'Ethiopia' },
-    { flag: 'US', code: '+1', name: 'United States' },
-    { flag: 'UK', code: '+12', name: 'United Kingdom' },
-  ]
+
   return (
-    <>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior="padding"
-        keyboardVerticalOffset={keyboardVerticalOffset}>
-        <View style={[defaultStyles.container, { padding: 20 }]}>
-          <Text style={defaultStyles.header}>Create an account</Text>
-          <Text style={defaultStyles.descriptionText}>
-            Enter your phone number. We will send you a confirmation code there
-          </Text>
-          <View style={styles.inputContainer}>
-            <TouchableOpacity onPress={() => {
-              toggleBottomSheet();
-            }} style={[styles.input, { width: 60, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
-              <Ionicons name='flag' size={25} />
-              <Ionicons name='chevron-down' />
-            </TouchableOpacity>
-            <View style={{ flex: 1, flexDirection: 'row' }}>
-              <TextInput
-                style={{
-                  backgroundColor: Colors.lightGray,
-                  padding: 10,
-                  paddingRight: 0,
-                  borderRightColor: Colors.gray,
-                  borderTopLeftRadius: 10,
-                  borderBottomLeftRadius: 10,
-                  fontSize: 16,
-                  width: 50,
-                  color: Colors.gray
-                }}
-                value={countryCode}
-                editable={false}
-              />
-              <TextInput
-                style={{
-                  backgroundColor: Colors.lightGray,
-                  padding: 14,
-                  flex: 1,
-                  borderTopRightRadius: 10,
-                  borderBottomRightRadius: 10,
-                  fontSize: 16,
-                }}
-                placeholder="Mobile number"
-                placeholderTextColor={Colors.gray}
-                keyboardType="numeric"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-              />
-            </View>
-          </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior="padding"
+      keyboardVerticalOffset={keyboardVerticalOffset}>
+      <View style={[defaultStyles.container, { padding: 20 }]}>
+        <Text style={defaultStyles.header}>Create an account</Text>
+        <Text style={defaultStyles.descriptionText}>
+          Enter your phone number. We will send you a confirmation code there
+        </Text>
 
 
 
 
-          
-
-          <TouchableOpacity
-            style={[
-              defaultStyles.btn,
-              phoneNumber !== '' ? styles.enabled : styles.disabled,
-              { marginBottom: 20 },
-            ]}
-            onPress={onSignup}>
-            <Text style={defaultStyles.buttonText}>Sign up</Text>
-          </TouchableOpacity>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-            <View
-              style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: Colors.gray }}
-            />
-            <Text style={{ color: Colors.gray, fontSize: 20 }}>or</Text>
-            <View
-              style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: Colors.gray }}
-            />
-          </View>
-
-
-          <Link
-            href={'/login'} replace asChild
-            style={[
-              defaultStyles.pillButton,
-              {
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 16,
-                marginTop: 20,
-                backgroundColor: '#fff',
+        <View style={{ width: '100%', flexDirection: 'column', alignItems: 'center', gap: 8, marginVertical: 30 }}>
+          <PhoneInput
+            placeholder="Enter phone"
+            phoneInputStyles={{
+              container: {
+                backgroundColor: "#fff",
+                borderWidth: 1,
+                borderColor: Colors.lightGray,
               },
-            ]}>
-            <TouchableOpacity>
-              <Text style={[defaultStyles.buttonText, { color: '#000' }]}>Already have an account? Login</Text>
-            </TouchableOpacity>
-          </Link>
+              flagContainer: {
+                borderTopLeftRadius: 7,
+                borderBottomLeftRadius: 7,
+                backgroundColor: Colors.lightGray,
+                justifyContent: 'center',
+              },
+              flag: {},
+              caret: {
+                color: '#F3F3F3',
+                fontSize: 16,
+              },
+              divider: {
+                width: 1,
+                backgroundColor: Colors.dark,
+              },
+              callingCode: {
+                fontSize: 16,
+                color: Colors.dark,
+              },
+              input: {
+                color: Colors.dark,
+              },
+            }}
+            modalStyles={{
+              modal: {
+                backgroundColor: Colors.lightGray,
+                borderWidth: 1,
+              },
+              divider: {
+                backgroundColor: 'transparent',
+              },
+              searchInput: {
+                borderWidth: 0,
+                borderBottomWidth: 2,
+                borderColor: '#222',
+                color: Colors.dark,
+                backgroundColor: Colors.lightGray,
+                paddingHorizontal: 12,
+                height: 46,
+              },
+              countryButton: {
+                backgroundColor: Colors.gray,
+                marginVertical: 4,
+              },
+              noCountryText: {},
+              noCountryContainer: {},
+              flag: {
+                color: '#FFFFFF',
+                fontSize: 20,
+              },
+              callingCode: {
+                color: '#F3F3F3',
+              },
+              countryName: {
+                color: '#F3F3F3',
+              },
+            }}
+            customCaret={<Ionicons name="chevron-down" size={16} color="#000000" />}
+            // defaultValue="+251994697123"
+            value={phoneNumber}
+            defaultCountry="ET"
+            onChangePhoneNumber={handlephoneNumber}
+            selectedCountry={selectedCountry}
+            onChangeSelectedCountry={handleSelectedCountry}
+          />
+          <TextInput style={{
+            backgroundColor: "#fff",
+            borderWidth: 1,
+            borderColor: Colors.lightGray,
+            color: Colors.dark,
+            width: '100%',
+            padding: 8,
+            paddingLeft: 16,
+            borderRadius: 8,
+          }}
+            secureTextEntry={true}
+            placeholder='password'
+            onChangeText={setPassword}
+          />
 
-
-          <View style={{ flex: 1 }} />
         </View>
-      </KeyboardAvoidingView>
-      <BottomSheet
-        index={-1}
-        onClose={() => { setBottomSheetOpen(false) }}
-        snapPoints={['60%']}
-        ref={bottomSheetRef}
-        enablePanDownToClose={true}
-        handleIndicatorStyle={{ backgroundColor: Colors.dark }}
-        style={styles.container}
-      >
-        <Text style={{ fontFamily: 'mon-sb', fontSize: 24 }}>Select your country</Text>
 
-        <ScrollView style={{ gap: 20 }}>
-          {Countries.map((item, index) => (
-            <TouchableOpacity onPress={() => setSelectedCountry(index)} key={index}>
-              <Text style={{ fontFamily: 'mon', paddingTop: 6 }}>{item.flag + " " + item.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </BottomSheet>
-    </>
+
+        <TouchableOpacity
+          style={[
+            defaultStyles.btn,
+            phoneNumber !== '' ? styles.enabled : styles.disabled,
+            { marginBottom: 20 },
+          ]}
+          onPress={handleRegister}>
+          <Text style={defaultStyles.buttonText}>Sign up</Text>
+        </TouchableOpacity>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+          <View
+            style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: Colors.gray }}
+          />
+          <Text style={{ color: Colors.gray, fontSize: 20 }}>or</Text>
+          <View
+            style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: Colors.gray }}
+          />
+        </View>
+
+
+        <Link
+          href={'/login'} replace asChild
+          style={[
+            defaultStyles.pillButton,
+            {
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 16,
+              marginTop: 20,
+              backgroundColor: '#fff',
+            },
+          ]}>
+          <TouchableOpacity>
+            <Text style={[defaultStyles.buttonText, { color: '#000' }]}>Already have an account? Login</Text>
+          </TouchableOpacity>
+        </Link>
+
+
+        <View style={{ flex: 1 }} />
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 const styles = StyleSheet.create({

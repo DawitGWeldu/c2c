@@ -25,12 +25,12 @@ import PhoneInput, {
   ICountry,
 } from 'react-native-international-phone-number';
 import { useAuth } from './context/AuthContext';
-
+import Toast from "react-native-root-toast"
 
 const Page = () => {
   const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0
   const router = useRouter()
-  const { onLogin } = useAuth()
+  const { onLogin, onRegister } = useAuth()
 
   const [selectedCountry, setSelectedCountry] = useState<
     undefined | ICountry
@@ -47,19 +47,33 @@ const Page = () => {
     setSelectedCountry(country);
   }
 
-  const onSignIn = async () => {
+  const handleLogin = async () => {
     setIsLoading(true);
 
     try {
-      const result = await onLogin!(phoneNumber, password)
-      console.log(result)
-      // if (result.status === 200) {
-      //   setIsLoading(false);
-      //   setPhoneNumber("");
-      //   setPassword("");
-      // }
-    } catch (error) {
-      alert("An error has occurred");
+      const phoneNumberWithSpaces = `${selectedCountry?.callingCode + phoneNumber}`
+      const trimmedPhoneNumber = phoneNumberWithSpaces.replace(/\s/g, "");
+      const result = await onLogin!(trimmedPhoneNumber, password)
+
+      // console.log(JSON.stringify(result))
+      setIsLoading(false);
+      if (result.error) {
+        console.log(result.msg.error)
+        Toast.show(result.msg.error, {
+          duration: Toast.durations.SHORT,
+          keyboardAvoiding: true,
+          backgroundColor: Colors.red
+        });
+      }
+
+      if (result.status === 200) {
+        setPhoneNumber("");
+        setPassword("");
+      }
+    } catch (e: any) {
+
+      // console.log(e)
+      // alert("An error has occurred");
       setIsLoading(false);
     }
   };
@@ -198,10 +212,10 @@ const Page = () => {
             padding: 8,
             paddingLeft: 16,
             borderRadius: 8,
-          }} 
-          secureTextEntry={true} 
-          placeholder='password'
-          onChangeText={setPassword}
+          }}
+            secureTextEntry={true}
+            placeholder='password'
+            onChangeText={setPassword}
           />
 
         </View>
@@ -213,7 +227,7 @@ const Page = () => {
             phoneNumber !== '' ? styles.enabled : styles.disabled,
             { marginBottom: 20 },
           ]}
-          onPress={() => onSignIn()}>
+          onPress={handleLogin}>
           {isLoading ? (<ActivityIndicator />) : (<Text style={defaultStyles.buttonText}>Continue</Text>)}
 
         </TouchableOpacity>

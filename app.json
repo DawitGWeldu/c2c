@@ -39,6 +39,9 @@
         "typedRoutes": true
       },
       "package": "com.client.ecommapp"
-    }
+    },
+    "plugins": [
+      "expo-build-properties"
+    ]
   }
 }
