@@ -53,8 +53,10 @@ const Page = () => {
 
   useEffect(() => {
     if (code.length === 6) {
+      setSending(true)
       if (signin === 'true') {
         verifyCode();
+        setSending(false)
       } else {
         verifyCode();
       }

@@ -79,7 +79,7 @@ const Page = () => {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor:'#fff' }}
       behavior="padding"
       keyboardVerticalOffset={keyboardVerticalOffset}>
       <View style={{ flex: 1, padding: 20 }}>
