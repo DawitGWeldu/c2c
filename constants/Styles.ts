@@ -61,7 +61,7 @@ export const defaultStyles = StyleSheet.create({
   descriptionText: {
     fontFamily: 'mon',
     fontSize: 18,
-    marginTop: 20,
+    marginVertical: 10,
     color: Colors.gray,
   },
   buttonText: {

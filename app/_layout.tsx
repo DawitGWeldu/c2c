@@ -7,10 +7,10 @@ import Colors from '@/constants/Colors';
 import ModalHeaderText from '@/components/ModalHeaderText';
 import { TouchableOpacity, SafeAreaView, useColorScheme, View, ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
-import { RootSiblingParent } from 'react-native-root-siblings';
-
 import { AuthProvider, useAuth } from './context/AuthContext';
+import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+
+const TOKEN_KEY = 'auth-jwt'
 
 // Cache the Clerk JWT
 const tokenCache = {
@@ -36,17 +36,66 @@ export {
 
 SplashScreen.preventAutoHideAsync();
 
+
+const toastConfig = {
+  /*
+    Overwrite 'success' type,
+    by modifying the existing `BaseToast` component
+  */
+  success: (props: any) => (
+    <BaseToast
+      {...props}
+      style={{ borderLeftColor: Colors.green, borderRadius: 10 }}
+      contentContainerStyle={{ paddingHorizontal: 15, borderRadius: 10 }}
+      text1Style={{
+        fontSize: 17,
+        fontFamily: 'mon-sb'
+      }}
+      text2Style={{
+        fontSize: 15,
+        fontFamily: 'mon',
+        fontWeight: '500'
+      }}
+    />
+  ),
+  /*
+    Overwrite 'error' type,
+    by modifying the existing `ErrorToast` component
+  */
+  error: (props: any) => (
+    <ErrorToast
+      {...props}
+      style={{ borderLeftColor: Colors.red, borderRadius: 10 }}
+      contentContainerStyle={{ paddingHorizontal: 15, borderRadius: 10 }}
+      text1Style={{
+        fontSize: 17,
+        fontFamily: 'mon-sb'
+      }}
+      text2Style={{
+        fontSize: 15,
+        fontFamily: 'mon',
+        fontWeight: '500'
+      }}
+    />
+  ),
+
+
+};
+
+
 export default function RootLayout() {
   return (
+    <>
 
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <RootSiblingParent>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AuthProvider>
           <RootLayoutNav />
-        </RootSiblingParent>
-      </AuthProvider>
-    </GestureHandlerRootView>
+          <Toast
+            config={toastConfig} />
+        </AuthProvider>
+      </GestureHandlerRootView>
 
+    </>
 
   );
 }
@@ -56,6 +105,7 @@ function RootLayoutNav() {
   const segments = useSegments();
   const { authState, onLogout } = useAuth()
   const rootNavigationState = useRootNavigationState()
+  const phoneVerified = authState?.phone_verified
 
 
   const [loaded, error] = useFonts({
@@ -76,6 +126,22 @@ function RootLayoutNav() {
     }
   }, [loaded]);
 
+
+  // useEffect(() => {
+  //   const loadToken = async () => {
+  //     const token = await SecureStore.getItemAsync(TOKEN_KEY)
+  //     // if (token && !authState?.phone_verified) {
+  //     //   const decodedToken = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
+  //     //   router.push({
+  //     //     pathname: '/verify/[phone]',
+  //     //     params: { phone: decodedToken.phone_number, signin: 'true' },
+  //     //   });
+  //     // }
+  //   }
+  //   loadToken()
+  // }, [authState?.phone_verified])
+
+
   useEffect(() => {
     if (!loaded) {
 
@@ -88,16 +154,24 @@ function RootLayoutNav() {
 
 
   useEffect(() => {
-    // if (!isLoaded) return;
-
     const inAuthGroup = segments[0] === '(authenticated)';
 
+
+
     if (authState?.authenticated && !inAuthGroup) {
-      router.replace('/(authenticated)/(tabs)');
+      if (authState.phone_verified) {
+        router.replace('/(authenticated)/(tabs)');
+      }
+      else{
+        router.push({
+          pathname: '/verify/[phone]',
+          params: { phone: "+251994697123", signin: 'true' },
+        });
+      }
     } else if (!authState?.authenticated) {
       router.replace('/');
     }
-  }, [authState?.authenticated]);
+  }, [authState?.authenticated, authState?.phone_verified]);
 
 
 

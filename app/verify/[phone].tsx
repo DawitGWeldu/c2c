@@ -1,6 +1,5 @@
 import Colors from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
-import { isClerkAPIResponseError, useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { Fragment, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
@@ -10,13 +9,14 @@ import {
   useBlurOnFulfill,
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
+import { useAuth } from '../context/AuthContext';
+import Toast from 'react-native-toast-message';
 const CELL_COUNT = 6;
 
 const Page = () => {
   const { phone, signin } = useLocalSearchParams<{ phone: string; signin: string }>();
   const [code, setCode] = useState('');
-  const { signIn } = useSignIn();
-  const { signUp, setActive } = useSignUp();
+  const { onVerifySignin } = useAuth();
 
   const ref = useBlurOnFulfill({ value: code, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
@@ -27,48 +27,54 @@ const Page = () => {
   useEffect(() => {
     if (code.length === 6) {
       if (signin === 'true') {
-        verifySignIn();
+        verifyCode();
       } else {
         verifyCode();
       }
     }
   }, [code]);
 
+  console.log(code)
+
   const verifyCode = async () => {
     try {
-      await signUp!.attemptPhoneNumberVerification({
-        code,
-      });
-      await setActive!({ session: signUp!.createdSessionId });
+      await onVerifySignin!(code);
     } catch (err) {
-      console.log('error', JSON.stringify(err, null, 2));
-      if (isClerkAPIResponseError(err)) {
-        Alert.alert('Error', err.errors[0].message);
-      }
+      console.log("error", JSON.stringify(err, null, 2));
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Something went wrong',
+        visibilityTime: 1500
+      });
     }
   };
 
-  const verifySignIn = async () => {
-    try {
-      await signIn!.attemptFirstFactor({
-        strategy: 'phone_code',
-        code,
-      });
-      await setActive!({ session: signIn!.createdSessionId });
-    } catch (err) {
-      console.log('error', JSON.stringify(err, null, 2));
-      if (isClerkAPIResponseError(err)) {
-        Alert.alert('Error', err.errors[0].message);
-      }
-    }
-  };
+  // const verifySignIn = async () => {
+  //   try {
+  //     await signIn!.attemptFirstFactor({
+  //       strategy: 'phone_code',
+  //       code,
+  //     });
+  //     await setActive!({ session: signIn!.createdSessionId });
+  //   } catch (err) {
+  //     console.log('error', JSON.stringify(err, null, 2));
+  //     if (isClerkAPIResponseError(err)) {
+  //       Alert.alert('Error', err.errors[0].message);
+  //     }
+  //   }
+  // };
 
   return (
-    <View style={defaultStyles.container}>
-      <Text style={defaultStyles.header}>6-digit code</Text>
-      <Text style={defaultStyles.descriptionText}>
-        Code sent to {phone} unless you already have an account
-      </Text>
+    <View style={[defaultStyles.container, { padding: 20, alignItems: 'center' }]}>
+      <Text style={defaultStyles.header}>Verify your phone</Text>
+      <View style={{ flexDirection: 'row' }}>
+        <Text style={defaultStyles.descriptionText}>
+          Verification code has been sent to <Text style={{ color: Colors.muted }}>
+            {phone}
+          </Text>
+        </Text>
+      </View>
 
       <CodeField
         ref={ref}
@@ -92,12 +98,12 @@ const Page = () => {
           </Fragment>
         )}
       />
-
-      <Link href={'/login'} replace asChild>
-        <TouchableOpacity>
-          <Text style={{fontFamily: 'mon-sb'}}>Already have an account? Log in</Text>
+      <View style={{ gap: 10, alignItems: 'center' }}>
+        <Text style={{ fontFamily: 'mon-sb' }}>Didn't recieve a code?</Text>
+        <TouchableOpacity style={[defaultStyles.btn, { backgroundColor: Colors.primary, padding: 10 }]}>
+          <Text style={{ fontFamily: 'mon-sb', color: '#fff' }}>Resend</Text>
         </TouchableOpacity>
-      </Link>
+      </View>
     </View>
   );
 };
@@ -111,7 +117,7 @@ const styles = StyleSheet.create({
   },
   cellRoot: {
     width: 45,
-    height: 60,
+    height: 45,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.lightGray,
@@ -119,7 +125,7 @@ const styles = StyleSheet.create({
   },
   cellText: {
     color: '#000',
-    fontSize: 36,
+    fontSize: 24,
     textAlign: 'center',
   },
   focusCell: {

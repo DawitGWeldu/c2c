@@ -1,13 +1,8 @@
 import Colors from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
-import { isClerkAPIResponseError, useSignIn } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
-import BottomSheet from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import axios from 'axios';
-
-const baseUrl = 'http://localhost:5000';
 
 import {
   View,
@@ -16,7 +11,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   TextInput,
 } from 'react-native';
@@ -25,7 +19,7 @@ import PhoneInput, {
   ICountry,
 } from 'react-native-international-phone-number';
 import { useAuth } from './context/AuthContext';
-import Toast from "react-native-root-toast"
+import Toast from 'react-native-toast-message';
 
 const Page = () => {
   const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0
@@ -43,6 +37,10 @@ const Page = () => {
     setPhoneNumber(phoneNumber);
   }
 
+  function handlePassword(password: string) {
+    setPassword(password);
+  }
+
   function handleSelectedCountry(country: ICountry) {
     setSelectedCountry(country);
   }
@@ -50,32 +48,31 @@ const Page = () => {
   const handleLogin = async () => {
     setIsLoading(true);
 
-    try {
-      const phoneNumberWithSpaces = `${selectedCountry?.callingCode + phoneNumber}`
-      const trimmedPhoneNumber = phoneNumberWithSpaces.replace(/\s/g, "");
-      const result = await onLogin!(trimmedPhoneNumber, password)
+    const phoneNumberWithSpaces = `${selectedCountry?.callingCode + phoneNumber}`
+    const trimmedPhoneNumber = phoneNumberWithSpaces.replace(/\s/g, "");
+    const result = await onLogin!(trimmedPhoneNumber, password)
 
-      // console.log(JSON.stringify(result))
-      setIsLoading(false);
-      if (result.error) {
-        console.log(result.msg.error)
-        Toast.show(result.msg.error, {
-          duration: Toast.durations.SHORT,
-          keyboardAvoiding: true,
-          backgroundColor: Colors.red
+    // console.log(JSON.stringify(result))
+    setIsLoading(false);
+    setPhoneNumber("");
+    setPassword("");
+
+    if (result.success === "true") {
+      if (JSON.parse(Buffer.from(result.token.split('.')[1], 'base64').toString()).phone_number_veified == false) {
+        router.push({
+          pathname: '/verify/[phone]',
+          params: { phone: trimmedPhoneNumber, signin: 'true' },
         });
       }
-
-      if (result.status === 200) {
-        setPhoneNumber("");
-        setPassword("");
-      }
-    } catch (e: any) {
-
-      // console.log(e)
-      // alert("An error has occurred");
-      setIsLoading(false);
+    } else if(result.error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: "Something went wrong, please try again",
+        visibilityTime: 1500
+      });
     }
+
   };
 
   return (
@@ -86,101 +83,60 @@ const Page = () => {
       <View style={{ flex: 1, padding: 20 }}>
         <Text style={defaultStyles.header}>Welcome</Text>
         <Text style={defaultStyles.descriptionText}>
-          Enter your phone number to login to your account
+          Enter your phone number and password to login to your account
         </Text>
-        {/* <View style={styles.inputContainer}>
-            <TouchableOpacity onPress={() => {
-              toggleBottomSheet();
-            }} style={[styles.input, { width: 60, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
-              <Ionicons name='flag' size={25} />
-              <Ionicons name='chevron-down' />
-            </TouchableOpacity>
-            <View style={{ flex: 1, flexDirection: 'row' }}>
-              <TextInput
-                style={{
-                  backgroundColor: Colors.lightGray,
-                  padding: 10,
-                  paddingRight: 0,
-                  borderRightColor: Colors.gray,
-                  borderTopLeftRadius: 10,
-                  borderBottomLeftRadius: 10,
-                  fontSize: 16,
-                  width: 50,
-                  color: Colors.gray
-                }}
-                value={countryCode}
-                editable={false}
-              />
-              <TextInput
-                style={{
-                  backgroundColor: Colors.lightGray,
-                  padding: 14,
-                  flex: 1,
-                  borderTopRightRadius: 10,
-                  borderBottomRightRadius: 10,
-                  fontSize: 16,
-                }}
-                placeholder="Mobile number"
-                placeholderTextColor={Colors.gray}
-                keyboardType="numeric"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-              />
-            </View>
-          </View> */}
 
-        <View style={{ width: '100%', flexDirection: 'column', alignItems: 'center', gap: 8, marginVertical: 30 }}>
+        <View style={{ width: '100%', flexDirection: 'column', alignItems: 'flex-start', gap: 15, marginVertical: 30 }}>
+          <Text style={{ fontFamily: 'mon' }}>Phone number</Text>
+
           <PhoneInput
             placeholder="Enter phone"
             phoneInputStyles={{
               container: {
                 backgroundColor: "#fff",
                 borderWidth: 1,
-                borderColor: Colors.lightGray,
+                borderColor: Colors.lightGray
               },
               flagContainer: {
                 borderTopLeftRadius: 7,
                 borderBottomLeftRadius: 7,
-                backgroundColor: Colors.lightGray,
-                justifyContent: 'center',
+                alignItems: 'center',
+
               },
               flag: {},
               caret: {
-                color: '#F3F3F3',
                 fontSize: 16,
               },
               divider: {
-                width: 1,
+                width: 0,
                 backgroundColor: Colors.dark,
               },
-              callingCode: {
-                fontSize: 16,
-                color: Colors.dark,
-              },
+              callingCode: {},
               input: {
+
                 color: Colors.dark,
               },
             }}
             modalStyles={{
               modal: {
-                backgroundColor: Colors.lightGray,
-                borderWidth: 1,
+                backgroundColor: "#fff",
+                borderWidth: 0,
               },
               divider: {
                 backgroundColor: 'transparent',
               },
               searchInput: {
                 borderWidth: 0,
-                borderBottomWidth: 2,
+                borderBottomWidth: 1,
                 borderColor: '#222',
                 color: Colors.dark,
-                backgroundColor: Colors.lightGray,
-                paddingHorizontal: 12,
-                height: 46,
+                paddingHorizontal: 20,
+                height: 50,
               },
               countryButton: {
-                backgroundColor: Colors.gray,
+                backgroundColor: Colors.lightGray,
                 marginVertical: 4,
+                borderWidth: 0,
               },
               noCountryText: {},
               noCountryContainer: {},
@@ -189,10 +145,10 @@ const Page = () => {
                 fontSize: 20,
               },
               callingCode: {
-                color: '#F3F3F3',
+                color: '#222',
               },
               countryName: {
-                color: '#F3F3F3',
+                color: '#222',
               },
             }}
             customCaret={<Ionicons name="chevron-down" size={16} color="#000000" />}
@@ -203,19 +159,23 @@ const Page = () => {
             selectedCountry={selectedCountry}
             onChangeSelectedCountry={handleSelectedCountry}
           />
+          <Text style={{ fontFamily: 'mon' }}>Password</Text>
           <TextInput style={{
             backgroundColor: "#fff",
             borderWidth: 1,
             borderColor: Colors.lightGray,
             color: Colors.dark,
             width: '100%',
-            padding: 8,
+            height: 50,
             paddingLeft: 16,
-            borderRadius: 8,
+            borderRadius: 8
           }}
+            value={password}
+            contextMenuHidden={true}
             secureTextEntry={true}
-            placeholder='password'
-            onChangeText={setPassword}
+            placeholderTextColor={'#aaa'}
+            placeholder='Password'
+            onChangeText={handlePassword}
           />
 
         </View>
@@ -228,7 +188,7 @@ const Page = () => {
             { marginBottom: 20 },
           ]}
           onPress={handleLogin}>
-          {isLoading ? (<ActivityIndicator />) : (<Text style={defaultStyles.buttonText}>Continue</Text>)}
+          {isLoading ? (<ActivityIndicator size={24} color={'#fff'} />) : (<Text style={defaultStyles.buttonText}>Continue</Text>)}
 
         </TouchableOpacity>
 
@@ -254,10 +214,8 @@ const Page = () => {
               alignItems: 'center',
               gap: 16,
               marginTop: 20,
-              backgroundColor: '#fff',
             },
           ]}>
-          <Ionicons name="lock-open" size={22} color={'#000'} />
           <Text style={[defaultStyles.buttonText, { color: '#000' }]}>Don't have an account? Register</Text>
         </TouchableOpacity>
 
