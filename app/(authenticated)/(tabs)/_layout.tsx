@@ -16,8 +16,9 @@ const Layout = () => {
       <Tabs.Screen
         name="index"
         options={{
+          tabBarShowLabel: false,
           tabBarLabel: 'Explore',
-          tabBarIcon: ({ size, color }) => <Ionicons name="search" size={size} color={color} />,
+          tabBarIcon: ({ size, color }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -49,10 +50,10 @@ const Layout = () => {
       <Tabs.Screen
         name="profile"
         options={{
-          tabBarLabel: 'Profile',
+          tabBarLabel: 'Tasks',
           headerShown: false,
           tabBarIcon: ({ size, color }) => (
-            <Ionicons name="person-circle-outline" size={size} color={color} />
+            <Ionicons name="walk-outline" size={size} color={color} />
           ),
         }}
       />
