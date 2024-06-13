@@ -2,7 +2,7 @@ import Colors from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { Fragment, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import {
   CodeField,
   Cursor,
@@ -16,13 +16,40 @@ const CELL_COUNT = 6;
 const Page = () => {
   const { phone, signin } = useLocalSearchParams<{ phone: string; signin: string }>();
   const [code, setCode] = useState('');
-  const { onVerifySignin } = useAuth();
+  const [codeSent, setCodeSent] = useState(false);
+  const [sending, setSending] = useState(false)
+  const { onVerifySignin, onResendOTP } = useAuth();
+
 
   const ref = useBlurOnFulfill({ value: code, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value: code,
     setValue: setCode,
   });
+
+  useEffect(() => {
+    const sendOTP = async () => {
+      setSending(true)
+      const otpSent = await onResendOTP!(phone!)
+      if (otpSent === true){
+        setSending(false)
+      }
+    }
+    sendOTP()
+  }, [])
+
+  useEffect(() => {
+    if (sending) {
+
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={{fontFamily: 'mon-sb', fontSize: 20}}>Sending verification code to {phone}</Text>
+      </View>
+
+    }
+  }, [sending])
+  
+  
 
   useEffect(() => {
     if (code.length === 6) {
@@ -50,20 +77,6 @@ const Page = () => {
     }
   };
 
-  // const verifySignIn = async () => {
-  //   try {
-  //     await signIn!.attemptFirstFactor({
-  //       strategy: 'phone_code',
-  //       code,
-  //     });
-  //     await setActive!({ session: signIn!.createdSessionId });
-  //   } catch (err) {
-  //     console.log('error', JSON.stringify(err, null, 2));
-  //     if (isClerkAPIResponseError(err)) {
-  //       Alert.alert('Error', err.errors[0].message);
-  //     }
-  //   }
-  // };
 
   return (
     <View style={[defaultStyles.container, { padding: 20, alignItems: 'center' }]}>

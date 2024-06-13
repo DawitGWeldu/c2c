@@ -6,10 +6,10 @@ import { Buffer } from 'buffer';
 
 interface AuthProps {
     authState?: { token: string | null, authenticated: boolean | null, phone_verified: boolean | null }
-    onRegister?: (phoneNumber: string, name: string, password: string) => Promise<any>
+    onRegister?: ( name: string, phoneNumber: string, password: string) => Promise<any>
     onLogin?: (phoneNumber: string, password: string) => Promise<any>
     onVerifySignin?: (code: string) => Promise<any>
-    onVerifyCode?: (code: string) => Promise<any>
+    onResendOTP?: (phoneNumber: string) => Promise<any>
     onLogout?: () => Promise<any>
 }
 const TOKEN_KEY = 'auth-jwt'
@@ -55,7 +55,10 @@ export const AuthProvider = ({ children }: any) => {
 
     const register = async (name: string, phoneNumber: string, password: string) => {
         try {
-            const { data } = await axios.post(`${API_URL}/auth/register`, { name, phone_number: phoneNumber, password })
+            console.log(name+phoneNumber+password)
+            const {data} = await axios.post(`${API_URL}/auth/register`, { name, phone_number: phoneNumber, password })
+            console.log(JSON.stringify(data))
+
             if (data.success) {
                 setAuthState({
                     token: data.token,
@@ -65,9 +68,10 @@ export const AuthProvider = ({ children }: any) => {
                 axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
 
                 await SecureStore.setItemAsync(TOKEN_KEY, data.token)
+                return data
 
             }
-            // return await axios.get(`${API_URL}`)
+            return data
         } catch (error) {
             return { error: true, msg: (error as any).response.data.msg }
         }
@@ -83,7 +87,7 @@ export const AuthProvider = ({ children }: any) => {
                     phone_verified: true
                 })
                 // axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
-                
+
                 // await SecureStore.setItemAsync(TOKEN_KEY, data.token)
 
             }
@@ -93,25 +97,29 @@ export const AuthProvider = ({ children }: any) => {
         }
     }
 
-    const verifyCode = async (name: string, phoneNumber: string, password: string) => {
+    const resendOTP = async (phoneNumber: string) => {
         try {
-            const { data } = await axios.post(`${API_URL}/auth/register`, { name, phone_number: phoneNumber, password })
+            const { data } = await axios.post(`${API_URL}/auth/resendSMS`, { phone_number: phoneNumber })
             if (data.success) {
-                setAuthState({
-                    token: data.token,
-                    authenticated: true,
-                    phone_verified: false
-                })
-                axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
+                // setAuthState({
+                //     token: authState.token,
+                //     authenticated: true,
+                //     phone_verified: data.phone_number_verified
+                // })
+                // // axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
 
-                await SecureStore.setItemAsync(TOKEN_KEY, data.token)
-
+                // // await SecureStore.setItemAsync(TOKEN_KEY, data.token)
+                return true
+            } else {
+                return false
             }
             // return await axios.get(`${API_URL}`)
         } catch (error) {
-            return { error: true, msg: (error as any).response.data.msg }
+            return false
         }
     }
+
+
 
     const login = async (phoneNumber: string, password: string) => {
         try {
@@ -155,6 +163,7 @@ export const AuthProvider = ({ children }: any) => {
         onLogin: login,
         onLogout: logout,
         onVerifySignin: verifySignin,
+        onResendOTP: resendOTP,
         authState
     }
 

@@ -1,10 +1,8 @@
 import Colors from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
-import { useSignUp } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
-import BottomSheet from '@gorhom/bottom-sheet';
 import { Link, useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -13,14 +11,14 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 
 import PhoneInput, {
   ICountry,
 } from 'react-native-international-phone-number';
 import { useAuth } from './context/AuthContext';
-import axios from 'axios'
+import { Buffer } from 'buffer';
 
 
 const Page = () => {
@@ -40,6 +38,10 @@ const Page = () => {
     setPhoneNumber(phoneNumber);
   }
 
+  function handlePassword(password: string) {
+    setPassword(password);
+  }
+
   function handleSelectedCountry(country: ICountry) {
     setSelectedCountry(country);
   }
@@ -48,22 +50,32 @@ const Page = () => {
     setIsLoading(true);
 
     try {
+      setIsLoading(true);
+
       const phoneNumberWithSpaces = `${selectedCountry?.callingCode + phoneNumber}`
       const trimmedPhoneNumber = phoneNumberWithSpaces.replace(/\s/g, "");
-      const result = await onRegister!('Dave', trimmedPhoneNumber, password)
-      
+      // console.log("here: " + trimmedPhoneNumber + " " + password + " ---- " + JSON.stringify(result))
 
-      console.log("here: " + trimmedPhoneNumber + " " + password + " ---- " + JSON.stringify(result))
+      const result = await onRegister!("Dave", trimmedPhoneNumber, password)
+
+
       setIsLoading(false);
+      setPhoneNumber("");
+      setPassword("");
 
-      if (result.status === 200) {
-        setPhoneNumber("");
-        setPassword("");
+      if (JSON.parse(Buffer.from(result.token.split('.')[1], 'base64').toString()).phone_number_veified == false) {
+        router.replace({
+          pathname: '/verify/[phone]',
+          params: { phone: trimmedPhoneNumber, signin: 'true' },
+        });
       }
+
     } catch (e) {
-      console.log(e)
+      console.log("Signup error: " + e)
       // alert("An error has occurred");
       setIsLoading(false);
+      setPhoneNumber("");
+      setPassword("");
     }
   };
 
@@ -167,21 +179,23 @@ const Page = () => {
             borderRadius: 8,
           }}
             secureTextEntry={true}
+            value={password}
             placeholder='password'
-            onChangeText={setPassword}
+            onChangeText={handlePassword}
           />
 
         </View>
 
 
         <TouchableOpacity
+          disabled={isLoading}
           style={[
             defaultStyles.btn,
             phoneNumber !== '' ? styles.enabled : styles.disabled,
             { marginBottom: 20 },
           ]}
           onPress={handleRegister}>
-          <Text style={defaultStyles.buttonText}>Sign up</Text>
+          {isLoading ? (<ActivityIndicator size={24} color={'#fff'} />) : (<Text style={defaultStyles.buttonText}>Sign up</Text>)}
         </TouchableOpacity>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>

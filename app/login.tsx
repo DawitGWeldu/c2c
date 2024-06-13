@@ -3,6 +3,8 @@ import { defaultStyles } from '@/constants/Styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { Buffer } from 'buffer';
+
 
 import {
   View,
@@ -24,7 +26,7 @@ import Toast from 'react-native-toast-message';
 const Page = () => {
   const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0
   const router = useRouter()
-  const { onLogin, onRegister } = useAuth()
+  const { onLogin, onResendOTP } = useAuth()
 
   const [selectedCountry, setSelectedCountry] = useState<
     undefined | ICountry
@@ -59,7 +61,7 @@ const Page = () => {
 
     if (result.success === "true") {
       if (JSON.parse(Buffer.from(result.token.split('.')[1], 'base64').toString()).phone_number_veified == false) {
-        router.push({
+        router.replace({
           pathname: '/verify/[phone]',
           params: { phone: trimmedPhoneNumber, signin: 'true' },
         });
