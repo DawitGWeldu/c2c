@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
@@ -9,6 +9,7 @@ const Layout = () => {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors.primary,
+        tabBarShowLabel: false,
         tabBarLabelStyle: {
           fontFamily: 'mon-sb',
         },
@@ -16,7 +17,6 @@ const Layout = () => {
       <Tabs.Screen
         name="index"
         options={{
-          tabBarShowLabel: false,
           tabBarLabel: 'Explore',
           tabBarIcon: ({ size, color }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
@@ -53,7 +53,7 @@ const Layout = () => {
           tabBarLabel: 'Tasks',
           headerShown: false,
           tabBarIcon: ({ size, color }) => (
-            <Ionicons name="walk-outline" size={size} color={color} />
+            <MaterialIcons name="delivery-dining" size={size} color={color} />
           ),
         }}
       />

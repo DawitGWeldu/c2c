@@ -12,28 +12,16 @@ import { useAuth } from '@/app/context/AuthContext';
 const categories = [
   {
     name: 'All',
-    icon: 'home',
   },
   {
-    name: 'Popular',
-    icon: 'local-fire-department',
+    name: 'Listings',
   },
   {
-    name: 'Electronics',
-    icon: 'videogame-asset',
+    name: 'Flights',
   },
   {
-    name: 'Equipment',
-    icon: 'house',
-  },
-  {
-    name: 'Beachfront',
-    icon: 'beach-access',
-  },
-  {
-    name: 'Countryside',
-    icon: 'nature-people',
-  },
+    name: 'Tasks',
+  }
 ];
 
 interface Props {
@@ -67,8 +55,8 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
               <View style={styles.searchBtn}>
                 <Ionicons name="search" size={24} />
                 <View>
-                  <Text style={{ fontFamily: 'mon-sb' }}>Where to?</Text>
-                  <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text>
+                  <Text style={{ fontFamily: 'mon-sb' }}>Filter</Text>
+                  {/* <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text> */}
                 </View>
               </View>
             </TouchableOpacity>
@@ -95,11 +83,11 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
                 key={index}
                 style={activeIndex === index ? styles.categoriesBtnActive : styles.categoriesBtn}
                 onPress={() => selectCategory(index)}>
-                <MaterialIcons
+                {/* <MaterialIcons
                   name={item.icon as any}
                   size={24}
                   color={activeIndex === index ? '#000' : Colors.gray}
-                />
+                /> */}
                 <Text style={activeIndex === index ? styles.categoryTextActive : styles.categoryText}>
                   {item.name}
                 </Text>
@@ -114,9 +102,10 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
-    height: 148,
+    height: 120,
     elevation: 2,
-    paddingTop: 10,
+    gap: 20,
+    paddingTop: 16,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 6,
@@ -130,7 +119,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    marginBottom: 12,
+    // marginBottom: 8,
   },
 
   searchBtn: {
@@ -139,10 +128,10 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 14,
     alignItems: 'center',
-    width: 280,
+    minWidth: 280,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#c2c2c2',
-    borderRadius: 30,
+    borderRadius: 60,
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.12,

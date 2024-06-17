@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import React, { useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity, Share } from 'react-native';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity, Share, ActivityIndicator } from 'react-native';
 import listingsData from '@/assets/data/airbnb-listings.json';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
@@ -14,13 +14,46 @@ import Animated, {
 import { defaultStyles } from '@/constants/Styles';
 import MapView from 'react-native-map-clustering';
 import { Marker } from 'react-native-maps';
+import { API_URL, useAuth } from '@/app/context/AuthContext';
+import axios from 'axios';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 const IMG_HEIGHT = 300;
 
 const DetailsPage = () => {
-  const { id } = useLocalSearchParams();
-  const listing = (listingsData as any[]).find((item) => item.id === id);
+  const { listing } = useLocalSearchParams<any>();
+  // const [listing, setListing] = useState('')
+  const [loading, setLoading] = useState(true)
+  const { authState } = useAuth()
+
+
+  // useEffect(() => {
+  //   const loadListing = async () => {
+  //     try {
+  //       setLoading(true)
+  //       const token = authState!.token
+  //       const activeUser = JSON.parse(Buffer.from(token!.split('.')[1], 'base64').toString())
+  //       const { data } = await axios.post(`${API_URL}/listing/${slug}`, {
+  //         activeUser: activeUser
+  //       })
+  //       setListing(data)
+  //     } catch (error: any) {
+
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: 'Error',
+  //         text2: error.respponse.msg || 'Couldn\'t fetch listing'
+  //       })
+  //     }
+
+  //   }
+
+  //   loadListing()
+  // }, [])
+
+
+
   const navigation = useNavigation();
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
@@ -87,25 +120,25 @@ const DetailsPage = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
+    (loading? <View style={styles.container}>
       <Animated.ScrollView
         contentContainerStyle={{ paddingBottom: 100 }}
         ref={scrollRef}
         scrollEventThrottle={16}>
         <Animated.Image
-          source={{ uri: listing.xl_picture_url }}
+          source={{ uri: `${API_URL + "/listingimages/" + listing.image}` }}
           style={[styles.image, imageAnimatedStyle]}
           resizeMode="cover"
         />
 
         <View style={styles.infoContainer}>
-          <Text style={styles.name}>{listing.name}</Text>
-          <Text style={{fontFamily: 'mon-sb', fontSize: 15}}>
+          <Text style={styles.name}>{listing.title}</Text>
+          <Text style={{ fontFamily: 'mon-sb', fontSize: 15 }}>
             <Ionicons name='airplane' />
-            From {listing.smart_location} To Ethiopia
+            From {listing.origin} To {listing.destination}
           </Text>
           <Text style={styles.rooms}>
-            Fragile · Non-Perishable 
+            Fragile · Non-Perishable
           </Text>
 
           {/* <ListingPickUpLocation latitude={listing.latitude} longitude={listing.longitude}/> */}
@@ -114,9 +147,9 @@ const DetailsPage = () => {
 
           {/* <View style={styles.divider} /> */}
           <View style={styles.hostView}>
-            <Image source={{ uri: listing.host_picture_url }} style={styles.host} />
+            {/* <Image source={{ uri: listing.user.image }} style={styles.host} /> */}
 
-            <View>
+            {/* <View>
               <Text style={{ fontFamily: 'mon-sb', fontSize: 16, color: Colors.muted }}>{listing.host_name}</Text>
               <Text style={{ color: Colors.muted }}>Joined {listing.host_since}</Text>
               <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
@@ -130,10 +163,10 @@ const DetailsPage = () => {
                   {listing.review_scores_rating / 20} · {listing.number_of_reviews} reviews
                 </Text>
               </View>
-            </View>
+            </View> */}
           </View>
 
-          <Text style={{fontFamily: 'mon-sb', fontSize: 15, paddingVertical: 6}}>Description</Text>
+          <Text style={{ fontFamily: 'mon-sb', fontSize: 15, paddingVertical: 6 }}>Description</Text>
           <Text numberOfLines={5} style={styles.description}>{listing.description}</Text>
 
           <View style={styles.divider} />
@@ -173,7 +206,7 @@ const DetailsPage = () => {
           </TouchableOpacity>
         </View>
       </Animated.View>
-    </View>
+    </View> : <View><ActivityIndicator size={'large'} color={Colors.primary}></ActivityIndicator></View>)
   );
 };
 
