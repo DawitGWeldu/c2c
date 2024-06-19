@@ -18,6 +18,7 @@ import { Marker } from 'react-native-maps';
 import { API_URL, useAuth } from '@/app/context/AuthContext';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 const IMG_HEIGHT = 300;
@@ -26,6 +27,7 @@ const DetailsPage = () => {
   const { slug } = useLocalSearchParams<{ slug: string, item: string }>();
 
   const [listing, setListing] = useState<any>(undefined)
+  const [joinedDate, setJoinedDate] = useState<any>(undefined)
   const [loading, setLoading] = useState(true)
   const { authState } = useAuth()
 
@@ -67,6 +69,9 @@ const DetailsPage = () => {
         console.log("jhgjhgjhgjhg: " + JSON.stringify(data.data))
 
         setListing(data.data)
+        const joinedDatee = new Date(data.data.user.createdAt)
+        setJoinedDate(joinedDatee.toLocaleDateString())
+
         setLoading(false)
       } catch (error: any) {
 
@@ -110,7 +115,7 @@ const DetailsPage = () => {
       headerTransparent: true,
 
       headerBackground: () => (
-        <Animated.View style={[ styles.header]}></Animated.View>
+        <Animated.View style={[styles.header]}></Animated.View>
       ),
       headerRight: () => (
         <View style={styles.bar}>
@@ -130,70 +135,99 @@ const DetailsPage = () => {
     });
   }, []);
 
+  if (listing) {
+  }
+
 
   return (
+
     (!listing ?
-      <View><ActivityIndicator size={'large'} color={Colors.primary}></ActivityIndicator></View>
+      <LinearGradient colors={["#f3f7f7", "#dee4f7"]}
+        style={{ flex: 1, paddingTop: 50 }}><View><ActivityIndicator size={'large'} color={Colors.primary}></ActivityIndicator></View></LinearGradient>
       :
-      <View style={styles.container}>
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 100 }}
-          // ref={scrollRef}
-          scrollEventThrottle={16}>
-          <Image
-            source={{ uri: `${API_URL + "/listingimages/" + listing.image}` }}
-            style={[styles.image]}
-            resizeMode="cover"
-          />
-
-          <View style={styles.infoContainer}>
-            <Text style={styles.name}>{listing.title}</Text>
-            <Text style={{marginTop: 12, fontFamily: 'mon-sb', fontSize: 16}}>Description</Text>
-            <Text style={styles.description}>{listing.description}</Text>
-            <Text style={{ fontFamily: 'mon-sb', fontSize: 15 }}>
-              <Ionicons name='airplane' />
-              From {listing.origin} To {listing.destination}
-            </Text>
-            <Text style={styles.rooms}>
-              Fragile · Non-Perishable
-            </Text>
-
-            {/* <ListingPickUpLocation latitude={listing.latitude} longitude={listing.longitude}/> */}
+      <LinearGradient colors={["#fff", "#f3f7f7"]}
+        style={{ flex: 1, paddingTop: 50 }}>
+        <View style={styles.container}>
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 100 }}
+            // ref={scrollRef}
+            scrollEventThrottle={16}>
+            <Image
+              source={{ uri: `${API_URL + "/listingimages/" + listing.image}` }}
+              style={[styles.image]}
+              resizeMode="cover"
+            />
 
 
 
-            {/* <View style={styles.divider} /> */}
-            <View style={styles.hostView}>
-              {/* <Image source={{ uri: listing.user.image }} style={styles.host} /> */}
+            <View style={styles.infoContainer}>
 
-              {/* <View>
-            <Text style={{ fontFamily: 'mon-sb', fontSize: 16, color: Colors.muted }}>{listing.host_name}</Text>
-            <Text style={{ color: Colors.muted }}>Joined {listing.host_since}</Text>
-            <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-              <Ionicons name="star" size={16} />
-              <Ionicons name="star" size={16} />
-              <Ionicons name="star" size={16} />
-              <Ionicons name="star" size={16} />
-              <Ionicons name="star-half-outline" size={16} />
-              <View style={styles.dividerVertical} />
-              <Text style={styles.ratings}>
-                {listing.review_scores_rating / 20} · {listing.number_of_reviews} reviews
+
+              <Text style={styles.name}>{listing.title}</Text>
+              <Text style={{ marginTop: 12, fontFamily: 'mon-sb', fontSize: 18 }}>Description</Text>
+              <Text style={styles.description}>{listing.description}</Text>
+              {/* <View style={styles.divider} /> */}
+
+              <View style={styles.hostView}>
+                <Image source={{ uri: `${API_URL}/userphotos/${listing.user.id_photo}` }} style={styles.host} />
+
+                <View>
+                  <Text style={{ fontFamily: 'mon-sb', fontSize: 16, color: Colors.muted }}>{listing.user.name}</Text>
+
+                  <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                    <Ionicons name="star" size={16} />
+                    <Ionicons name="star" size={16} />
+                    <Ionicons name="star" size={16} />
+                    <Ionicons name="star" size={16} />
+                    <Ionicons name="star-half-outline" size={16} />
+                    <View style={styles.dividerVertical} />
+                    <Text style={{ color: Colors.muted }}>Joined {joinedDate}</Text>
+
+                  </View>
+                </View>
+              </View>
+
+
+              <Text style={{ marginVertical: 8, fontFamily: 'mon-sb', fontSize: 18 }}>Item information</Text>
+              <View style={styles.divider} />
+
+              <Text style={{ fontFamily: 'mon', fontSize: 15 }}>
+
+                <MaterialIcons name='flight-takeoff' color={Colors.green} />
+                {" "}
+                From {listing.origin}
               </Text>
-            </View>
-          </View> */}
-            </View>
+              <Text style={{ fontFamily: 'mon', fontSize: 15 }}>
+                <MaterialIcons name='flight-land' color={Colors.primary} />
+                {" "}
+                To {listing.destination}
+              </Text>
+              <Text style={{ fontFamily: 'mon', fontSize: 15, marginTop: 10 }}>
+                <MaterialIcons name='scale' color={Colors.dark} />
+                {" "}
+                Weight:  {listing.weight}kg
+              </Text>
+              {/* <Text style={styles.rooms}>
+              Fragile · Non-Perishable
+            </Text> */}
 
-            {/* <Text style={{ fontFamily: 'mon-sb', fontSize: 15, paddingVertical: 6 }}>Description</Text>
+              {/* <ListingPickUpLocation latitude={listing.latitude} longitude={listing.longitude}/> */}
+
+
+
+
+
+              {/* <Text style={{ fontFamily: 'mon-sb', fontSize: 15, paddingVertical: 6 }}>Description</Text>
           <Text numberOfLines={5} style={styles.description}>{listing.description}</Text> */}
 
-            <View style={styles.divider} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 4 }}>
-              <MaterialIcons name='location-searching' size={18} />
-              <Text style={{ fontFamily: 'mon-sb', fontSize: 18 }}>Pickup Location</Text>
+              <View style={styles.divider} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 4 }}>
+                <MaterialIcons name='location-searching' size={18} />
+                <Text style={{ fontFamily: 'mon-sb', fontSize: 18 }}>Pickup Location</Text>
 
-            </View>
-            <View style={{ width: Dimensions.get('window').width - 48, height: 250 }}>
-              {/* <MapView
+              </View>
+              {/* <View style={{ width: Dimensions.get('window').width - 48, height: 250 }}> */}
+                {/* <MapView
                 // scrollEnabled={false}
                 rotateEnabled={false}
                 animationEnabled={false}
@@ -206,24 +240,26 @@ const DetailsPage = () => {
                   }}
                 />
               </MapView> */}
+              {/* </View> */}
             </View>
-          </View>
-        </ScrollView>
+          </ScrollView>
 
-        <View style={defaultStyles.footer} >
-          <View
-            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={styles.footerText && { flexDirection: 'column', alignItems: 'flex-start' }}>
-              <Text style={styles.footerPrice}>{listing.price} kg</Text>
-              <Text style={{ fontFamily: 'mon', fontSize: 10 }}>Remaining Bagage Allowance </Text>
+          <View style={defaultStyles.footer} >
+            <View
+              style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+              {/* <View style={styles.footerText && { flexDirection: 'column', alignItems: 'flex-start' }}>
+                <Text style={styles.footerPrice}>{listing.price} kg</Text>
+                <Text style={{ fontFamily: 'mon', fontSize: 10 }}>Remaining Bagage Allowance </Text>
+              </View> */}
+
+              <TouchableOpacity style={[defaultStyles.btn, { paddingRight: 20, paddingLeft: 20 }]}>
+                <Text style={defaultStyles.btnText}>Interested <Ionicons name='hand-left' size={14} /></Text>
+              </TouchableOpacity>
             </View>
-
-            <TouchableOpacity style={[defaultStyles.btn, { paddingRight: 20, paddingLeft: 20 }]}>
-              <Text style={defaultStyles.btnText}>Interested <Ionicons name='hand-left' size={14} /></Text>
-            </TouchableOpacity>
           </View>
         </View>
-      </View>)
+      </LinearGradient>
+    )
     // <View><TouchableOpacity style={defaultStyles.btn} onPress={handleRefresh}><Text>Reload</Text></TouchableOpacity><ActivityIndicator size={'large'} color={Colors.primary}></ActivityIndicator></View>
 
   );
@@ -232,7 +268,6 @@ const DetailsPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
   },
   image: {
     height: IMG_HEIGHT,
@@ -240,7 +275,6 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     padding: 24,
-    backgroundColor: '#fff',
   },
   name: {
     fontSize: 20,
@@ -264,7 +298,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.gray,
+    backgroundColor: Colors.lightGray,
     marginVertical: 8
   },
   dividerVertical: {
@@ -282,11 +316,12 @@ const styles = StyleSheet.create({
   hostView: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    padding: 10,
-    borderRadius: 6,
-    marginBottom: 6,
-    backgroundColor: 'rgba(22, 22, 22, 0.1)'
+    gap: 8,
+    marginTop: 16,
+    padding: 8,
+    borderRadius: 10,
+    marginBottom: 16,
+    backgroundColor: Colors.lightGray
   },
   footerText: {
     height: '100%',

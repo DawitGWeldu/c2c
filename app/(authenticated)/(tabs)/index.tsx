@@ -31,7 +31,7 @@ const Page = () => {
 
       try {
         const { data } = await axios.get(`${API_URL}/listing/getAllListings`)
-        console.log(data.data[0].user)
+        // console.log(data.data[0].user)
         setItems(data.data)
         setLoading(false)
       } catch {
