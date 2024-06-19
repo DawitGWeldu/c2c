@@ -236,13 +236,14 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen name="(authenticated)/(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(authenticated)/listing/[id]" options={{ headerTitle: '' }} />
+      <Stack.Screen name="(authenticated)/listing/[slug]" options={{ headerTitle: '' }} />
       <Stack.Screen
         name="(authenticated)/(modals)/booking"
         options={{
           presentation: 'transparentModal',
           animation: 'fade',
           headerTransparent: true,
+          headerBackVisible: false,
           headerTitle: (props) => <ModalHeaderText />,
           headerLeft: () => (
             <TouchableOpacity

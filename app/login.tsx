@@ -82,8 +82,8 @@ const Page = () => {
       style={{ flex: 1, backgroundColor:'#fff' }}
       behavior="padding"
       keyboardVerticalOffset={keyboardVerticalOffset}>
-      <View style={{ flex: 1, padding: 20 }}>
-        <Text style={defaultStyles.header}>Welcome</Text>
+      <View style={{ flex: 1, padding: 20, alignItems: 'center' }}>
+        <Text style={defaultStyles.header}>Login</Text>
         <Text style={defaultStyles.descriptionText}>
           Enter your phone number and password to login to your account
         </Text>
@@ -183,11 +183,11 @@ const Page = () => {
         </View>
 
         <TouchableOpacity
-          disabled={isLoading}
+          disabled={isLoading || phoneNumber == ""}
           style={[
             defaultStyles.btn,
             phoneNumber !== '' ? styles.enabled : styles.disabled,
-            { marginBottom: 20 },
+            { marginBottom: 20, width: '100%' },
           ]}
           onPress={handleLogin}>
           {isLoading ? (<ActivityIndicator size={24} color={'#fff'} />) : (<Text style={defaultStyles.buttonText}>Continue</Text>)}

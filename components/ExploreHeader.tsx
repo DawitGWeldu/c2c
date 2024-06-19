@@ -55,14 +55,14 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
               <View style={styles.searchBtn}>
                 <Ionicons name="search" size={24} />
                 <View>
-                  <Text style={{ fontFamily: 'mon-sb' }}>Filter</Text>
+                  <Text style={{ fontFamily: 'mon-sb' }}>Search</Text>
                   {/* <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text> */}
                 </View>
               </View>
             </TouchableOpacity>
           </Link>
           <Pressable onPress={handleLogout} style={styles.filterBtn}>
-            <Ionicons name="log-out-outline" size={24} />
+            <Ionicons name="person" size={24} />
           </Pressable>
         </View>
 
@@ -101,18 +101,11 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+    // backgroundColor: '#000',
     height: 120,
-    elevation: 2,
-    gap: 20,
+    gap: 8,
     paddingTop: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: {
-      width: 1,
-      height: 10,
-    },
+  
   },
   actionRow: {
     flexDirection: 'row',
@@ -126,25 +119,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     flexDirection: 'row',
     gap: 10,
-    padding: 14,
+    padding: 10,
     alignItems: 'center',
     minWidth: 280,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#c2c2c2',
     borderRadius: 60,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: {
-      width: 1,
-      height: 1,
-    },
+    
   },
   filterBtn: {
     padding: 10,
-    borderWidth: 1,
-    borderColor: '#A2A0A2',
+    backgroundColor: Colors.lightGray,
     borderRadius: 24,
   },
   categoryText: {
@@ -155,21 +140,23 @@ const styles = StyleSheet.create({
   categoryTextActive: {
     fontSize: 14,
     fontFamily: 'mon-sb',
-    color: '#000',
+    color: '#fff',
   },
   categoriesBtn: {
     flex: 1,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 8,
+    padding: 5,
   },
   categoriesBtnActive: {
+    backgroundColor: Colors.primary,
+    padding: 5,
+    borderRadius: 15,
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderBottomColor: '#000',
-    borderBottomWidth: 2,
-    paddingBottom: 8,
   },
 });
 

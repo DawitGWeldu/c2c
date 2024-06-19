@@ -188,7 +188,7 @@ const Page = () => {
 
 
         <TouchableOpacity
-          disabled={isLoading}
+          disabled={isLoading || phoneNumber == ""}
           style={[
             defaultStyles.btn,
             phoneNumber !== '' ? styles.enabled : styles.disabled,

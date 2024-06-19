@@ -1,21 +1,45 @@
 import Colors from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
 import { Link } from 'expo-router';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 
 const Page = () => {
 
-  return (
-    <View style={styles.container}>
-      <View style={{ marginTop: 80, padding: 20 }}>
-        <Text style={[styles.header, {color: Colors.dark}]}>WELCOME!</Text>
-        <Text style={[styles.header_light, {color: Colors.gray}]}> Log in or create an account to continue.</Text>
-      </View>
 
+  const openLink = () => {
+    Linking.openURL('https://galaxies.dev');
+  };
+
+
+  return (
+    <>
+      <View style={styles.container}>
+        <Text style={[styles.header, { color: Colors.dark }]}>Welcome</Text>
+
+        <View style={{ marginTop: 80, width: 700, height: '65%', padding: 20 }}>
+        </View>
+
+
+
+        <Text style={styles.description}>
+          Read our{' '}
+          <Text style={styles.link} onPress={openLink}>
+            Privacy Policy
+          </Text>
+          . {'By continuing you to use the app, you agree to the '}
+          <Text style={styles.link} onPress={openLink}>
+            Terms of Service
+          </Text>
+          .
+        </Text>
+
+
+
+      </View>
       <View style={styles.buttons}>
         <Link
           href={'/login'}
-          style={[defaultStyles.btn, { flex: 1, backgroundColor: Colors.dark }]}
+          style={[defaultStyles.btn, { flex: 1, backgroundColor: Colors.primary }]}
           asChild>
           <TouchableOpacity>
             <Text style={{ color: 'white', fontSize: 22, fontWeight: '500' }}>Log in</Text>
@@ -23,21 +47,30 @@ const Page = () => {
         </Link>
         <Link
           href={'/signup'}
-          style={[defaultStyles.btn, { flex: 1, backgroundColor: '#fff' }]}
+          style={[defaultStyles.btn, { flex: 1, backgroundColor: Colors.lightGray }]}
           asChild>
           <TouchableOpacity>
             <Text style={{ fontSize: 22, fontWeight: '500' }}>Sign up</Text>
           </TouchableOpacity>
         </Link>
       </View>
-    </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    marginTop: 50
+  },
+  welcome: {
+    width: '100%',
+    height: 300,
+    borderRadius: 60,
+    marginBottom: 80,
   },
   video: {
     width: '100%',
@@ -45,8 +78,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   header: {
-    fontSize: 36,
-    fontWeight: '900',
+    fontSize: 30,
+    fontFamily: 'mon-b',
+    fontWeight: '800',
     textTransform: 'uppercase',
     color: 'white',
   },
@@ -54,14 +88,30 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '900',
     textTransform: 'uppercase',
-    color: 'white',
+    // color: 'white',
   },
   buttons: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 20,
-    marginBottom: 60,
+    marginBottom: "10%",
     paddingHorizontal: 20,
+    fontFamily: 'mon-sb'
+  },
+  headline: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginVertical: 20,
+  },
+  description: {
+    fontFamily: 'mon',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 80,
+    color: Colors.gray,
+  },
+  link: {
+    color: Colors.primary,
   },
 });
 export default Page;
