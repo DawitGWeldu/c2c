@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 
 import PhoneInput, {
@@ -19,9 +20,48 @@ import PhoneInput, {
 } from 'react-native-international-phone-number';
 import { useAuth } from './context/AuthContext';
 import { Buffer } from 'buffer';
+import * as DocumentPicker from "expo-document-picker";
+import Toast from 'react-native-toast-message';
+
+
 
 
 const Page = () => {
+  const [form, setForm] = useState<any>({
+    name: "",
+    phoneNumber: "",
+    password: "",
+    idPhoto: null
+  });
+
+
+  const openPicker = async (selectType: any) => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type:
+        selectType === "image"
+          ? ["image/png", "image/jpg"]
+          : ["video/mp4", "video/gif"],
+    });
+
+    if (!result.canceled) {
+      if (selectType === "image") {
+        setForm({
+          ...form,
+          idPhoto: result.assets[0],
+        });
+      }
+    } else {
+      setTimeout(() => {
+        Toast.show({
+          type: 'info',
+          text1: "Document picked",
+          text2: JSON.stringify(result, null, 2)
+        });
+      }, 100);
+    }
+  };
+
+
   const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0;
   const router = useRouter();
 
@@ -85,16 +125,35 @@ const Page = () => {
       style={{ flex: 1 }}
       behavior="padding"
       keyboardVerticalOffset={keyboardVerticalOffset}>
-      <View style={[defaultStyles.container, { padding: 20 }]}>
+      <View style={[defaultStyles.container, { padding: 20, paddingHorizontal: 20 }]}>
         <Text style={defaultStyles.header}>Create an account</Text>
         <Text style={defaultStyles.descriptionText}>
-          Enter your phone number. We will send you a confirmation code there
+          After filling out the form and you will recieve a confirmation code to verify your phone number
         </Text>
 
-
-
-
-        <View style={{ width: '100%', flexDirection: 'column', alignItems: 'center', gap: 8, marginVertical: 30 }}>
+        <View style={{ width: '100%', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+          <Text style={{ color: Colors.dark, fontFamily: "mon" }}>
+            Name
+          </Text>
+          <TextInput
+            placeholderTextColor={Colors.lightGray}
+            style={{
+              backgroundColor: "#fff",
+              borderWidth: 1,
+              borderColor: Colors.lightGray,
+              color: Colors.dark,
+              width: '100%',
+              padding: 8,
+              paddingLeft: 16,
+              borderRadius: 8,
+            }}
+            value={form.name}
+            placeholder='Enter you name'
+            onChangeText={(e: any) => setForm({ ...form, name: e })}
+          />
+          <Text style={{ color: Colors.dark, fontFamily: "mon" }}>
+            Phone number
+          </Text>
           <PhoneInput
             placeholder="Enter phone"
             phoneInputStyles={{
@@ -168,6 +227,9 @@ const Page = () => {
             selectedCountry={selectedCountry}
             onChangeSelectedCountry={handleSelectedCountry}
           />
+          <Text style={{ color: Colors.dark, fontFamily: "mon" }}>
+            Password
+          </Text>
           <TextInput style={{
             backgroundColor: "#fff",
             borderWidth: 1,
@@ -180,9 +242,39 @@ const Page = () => {
           }}
             secureTextEntry={true}
             value={password}
-            placeholder='password'
+            placeholder='Enter your password'
+            placeholderTextColor={Colors.lightGray}
             onChangeText={handlePassword}
           />
+
+          {/* <View style={{ width: '100%', flexDirection: 'column', gap: 8 }}>
+            <Text style={{ color: Colors.dark, fontFamily: "mon" }}>
+              Upload your ID
+            </Text>
+
+            <TouchableOpacity onPress={() => openPicker("image")}>
+              {form.idPhoto ? (
+                <Image
+                  source={{ uri: form.idPhoto.uri }}
+                  style={{ width: '100%', height: 64, borderRadius: 8 }}
+                  resizeMode={'cover'}
+                />
+              ) : (
+                <View style={{ height: 150, width: '100%', paddingHorizontal: 4, backgroundColor: Colors.lightGray, borderRadius: 10, borderColor: Colors.primary, justifyContent: 'center', alignItems: 'center' }}>
+                  <View style={{ borderStyle: 'dashed', borderWidth: 1, borderRadius: 8, borderColor: Colors.primary, width: 100, height: 100, justifyContent: 'center', alignItems: 'center' }}>
+                    <Ionicons
+                      name='cloud-upload-outline'
+                      color={Colors.gray}
+
+                      size={50}
+                    // alt="upload"
+                    // style={{ width: "50%", alignItems: 'center', height: "50%"}}
+                    />
+                  </View>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View> */}
 
         </View>
 
@@ -191,41 +283,12 @@ const Page = () => {
           disabled={isLoading || phoneNumber == ""}
           style={[
             defaultStyles.btn,
-            phoneNumber !== '' ? styles.enabled : styles.disabled,
-            { marginBottom: 20 },
+            (phoneNumber !== '' ? styles.enabled : styles.disabled),
+            { marginVertical: 10 },
           ]}
           onPress={handleRegister}>
           {isLoading ? (<ActivityIndicator size={24} color={'#fff'} />) : (<Text style={defaultStyles.buttonText}>Sign up</Text>)}
         </TouchableOpacity>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <View
-            style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: Colors.gray }}
-          />
-          <Text style={{ color: Colors.gray, fontSize: 20 }}>or</Text>
-          <View
-            style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: Colors.gray }}
-          />
-        </View>
-
-
-        <Link
-          href={'/login'} replace asChild
-          style={[
-            defaultStyles.pillButton,
-            {
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 16,
-              marginTop: 20,
-              backgroundColor: '#fff',
-            },
-          ]}>
-          <TouchableOpacity>
-            <Text style={[defaultStyles.buttonText, { color: '#000' }]}>Already have an account? Login</Text>
-          </TouchableOpacity>
-        </Link>
-
 
         <View style={{ flex: 1 }} />
       </View>

@@ -62,12 +62,12 @@ const Page = () => {
               style={styles.cardPreview}
               entering={FadeIn.duration(200)}
               exiting={FadeOut.duration(200)}>
-              <Text style={styles.previewText}>Where</Text>
-              <Text style={styles.previewdData}>I'm flexible</Text>
+              <Text style={styles.previewText}>When?</Text>
+              <Text style={styles.previewdData}>PicK arrival time</Text>
             </AnimatedTouchableOpacity>
           )}
 
-          {openCard == 0 && <Text style={styles.cardHeader}>Where to?</Text>}
+          {openCard == 0 && <Text style={styles.cardHeader}>Destination</Text>}
           {openCard == 0 && (
             <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.cardBody}>
               <View style={styles.searchSection}>
@@ -137,12 +137,12 @@ const Page = () => {
               style={styles.cardPreview}
               entering={FadeIn.duration(200)}
               exiting={FadeOut.duration(200)}>
-              <Text style={styles.previewText}>Who</Text>
-              <Text style={styles.previewdData}>Add guests</Text>
+              <Text style={styles.previewText}>Categories</Text>
+              <Text style={styles.previewdData}>Choose a category</Text>
             </AnimatedTouchableOpacity>
           )}
 
-          {openCard == 2 && <Text style={styles.cardHeader}>Who's coming?</Text>}
+          {openCard == 2 && <Text style={styles.cardHeader}>Categories</Text>}
 
           {openCard == 2 && (
             <Animated.View style={styles.cardBody}>

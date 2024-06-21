@@ -18,7 +18,7 @@ const Layout = () => {
         name="index"
         options={{
           tabBarLabel: 'Explore',
-          tabBarIcon: ({ size, color }) => <Ionicons name="home-outline" size={size} color={color} />,
+          tabBarIcon: ({ size, color }) => <MaterialIcons name="home" size={32} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -26,15 +26,17 @@ const Layout = () => {
         options={{
           tabBarLabel: 'My Listings',
           tabBarIcon: ({ size, color }) => (
-            <Ionicons name="briefcase-outline" size={size} color={color} />
+            <MaterialIcons name="luggage" size={30} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="trips"
+        name="create"
         options={{
+          headerShown: false,
           tabBarLabel: 'Create',
-          tabBarIcon: ({ size, color }) => <Ionicons name="add" size={size} color={color} />,
+          tabBarIconStyle: {borderRadius: 25, width: 70, fontWeight: 'bold', backgroundColor: Colors.primary},
+          tabBarIcon: ({ size, color }) => <Ionicons name="add" size={size} color={'#fff'} />,
         }}
       />
       <Tabs.Screen
@@ -53,7 +55,7 @@ const Layout = () => {
           tabBarLabel: 'Tasks',
           headerShown: false,
           tabBarIcon: ({ size, color }) => (
-            <MaterialIcons name="delivery-dining" size={size} color={color} />
+            <MaterialIcons name="task" size={size} color={color} />
           ),
         }}
       />

@@ -106,7 +106,7 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
 const styles = StyleSheet.create({
   listing: {
     padding: 16,
-    marginVertical: 16,
+    marginTop: 16,
   },
   image: {
     width: '100%',

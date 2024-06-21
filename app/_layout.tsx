@@ -157,7 +157,7 @@ function RootLayoutNav() {
     const inAuthGroup = segments[0] === '(authenticated)';
 
 
-
+    console.log("HERERE")
     if (authState?.authenticated && !inAuthGroup) {
       if (authState.phone_verified) {
         router.replace('/(authenticated)/(tabs)');
