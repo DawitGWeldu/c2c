@@ -8,14 +8,14 @@ import {
 
 export const styles = StyleSheet.create({
   sliderImage: {
-    height: hp("30%"),
+    height: hp("25%"),
     borderRadius: 15,
     overflow: "hidden",
   },
   container: {
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.lightGray,
-    height: hp("30%"),
+    height: hp("25%"),
     borderRadius: 15, 
     overflow: "hidden",
   },

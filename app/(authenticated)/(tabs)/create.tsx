@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { router } from "expo-router";
 // import { ResizeMode, Video } from "expo-av";
 import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
@@ -24,11 +28,24 @@ import { defaultStyles } from "@/constants/Styles";
 import { LinearGradient } from "expo-linear-gradient";
 // import { useGlobalContext } from "../../context/GlobalProvider";
 
+
+
+
+const imgDir = FileSystem.documentDirectory + 'images/';
+
+const ensureDirExists = async () => {
+  const dirInfo = await FileSystem.getInfoAsync(imgDir);
+  if (!dirInfo.exists) {
+    await FileSystem.makeDirectoryAsync(imgDir, { intermediates: true });
+  }
+};
+
+
+
 const Create = () => {
   const { authState } = useAuth()
   const token = authState?.token
   const user = JSON.parse(Buffer.from(token!.split('.')[1], 'base64').toString())
-  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState<any>({
     title: "",
     video: null,
@@ -36,68 +53,83 @@ const Create = () => {
     prompt: "",
   });
 
-  const openPicker = async (selectType: any) => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type:
-        selectType === "image"
-          ? ["image/png", "image/jpg"]
-          : ["video/mp4", "video/gif"],
+  const [uploading, setUploading] = useState(false);
+  const [images, setImages] = useState<any[]>([]);
+
+
+
+
+  useEffect(() => {
+    loadImages();
+  }, []);
+
+
+
+
+  // Save image to file system
+  const saveImage = async (uri: string) => {
+    await ensureDirExists();
+    const filename = new Date().getTime() + '.jpeg';
+    const dest = imgDir + filename;
+    await FileSystem.copyAsync({ from: uri, to: dest });
+    setImages([...images, dest]);
+  };
+
+  // Upload image to server
+  const uploadImage = async (uri: string) => {
+    setUploading(true);
+
+    await FileSystem.uploadAsync('http://192.168.1.52:8888/upload.php', uri, {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: 'file'
     });
 
-    if (!result.canceled) {
-      if (selectType === "image") {
-        setForm({
-          ...form,
-          thumbnail: result.assets[0],
-        });
-      }
+    setUploading(false);
+  };
 
-      if (selectType === "video") {
-        setForm({
-          ...form,
-          video: result.assets[0],
-        });
-      }
+  // Delete image from file system
+  const deleteImage = async (uri: string) => {
+    await FileSystem.deleteAsync(uri);
+    setImages(images.filter((i) => i !== uri));
+  };
+
+
+
+
+  // Load images from file system
+  const loadImages = async () => {
+    await ensureDirExists();
+    const files = await FileSystem.readDirectoryAsync(imgDir);
+    if (files.length > 0) {
+      setImages(files.map((f) => imgDir + f));
+    }
+  };
+
+  // Select image from library or camera
+  const selectImage = async (useLibrary: boolean) => {
+    let result;
+    const options: ImagePicker.ImagePickerOptions = {
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.75
+    };
+
+    if (useLibrary) {
+      result = await ImagePicker.launchImageLibraryAsync(options);
     } else {
-      setTimeout(() => {
-        Alert.alert("Document picked", JSON.stringify(result, null, 2));
-      }, 100);
-    }
-  };
-
-  const submit = async () => {
-    if (
-      (form.prompt === "") ||
-      (form.title === "") ||
-      !form.thumbnail ||
-      !form.video
-    ) {
-      return Alert.alert("Please provide all fields");
+      await ImagePicker.requestCameraPermissionsAsync();
+      result = await ImagePicker.launchCameraAsync(options);
     }
 
-    setUploading(true);
-    try {
-      await createVideoPost({
-        ...form,
-        userId: user.$id,
-      });
-
-      Alert.alert("Success", "Post uploaded successfully");
-      router.push("/home");
-    } catch (error: any) {
-      Alert.alert("Error", error.message);
-    } finally {
-      setForm({
-        title: "",
-        video: null,
-        thumbnail: null,
-        prompt: "",
-      });
-
-      setUploading(false);
+    // Save image if not cancelled
+    if (!result.canceled) {
+      saveImage(result.assets[0].uri);
     }
-  };
 
+
+  }
   return (
     <LinearGradient colors={["#f3f7f7", "#dee4f7"]}
       style={{ flex: 1, paddingTop: 50 }}>
@@ -117,16 +149,17 @@ const Create = () => {
             Upload a valid ID
           </Text>
 
-          <TouchableOpacity onPress={() => openPicker("image")}>
-            {form.video ? (
-              // <Video
-              //   source={{ uri: form.video.uri }}
-              //   className="w-full h-64 rounded-2xl"
-              //   useNativeControls
-              //   resizeMode={ResizeMode.COVER}
-              //   isLooping
-              // />
-              <View>Video Here</View>
+          <TouchableOpacity style={{position: 'absolute', left: "43%", bottom: 20, zIndex: 1}}>
+            <Ionicons name="refresh" size={32} color="#fff" />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => selectImage(false)}>
+            {images ? (
+              <Image
+                source={{ uri: images[(images.length - 1)] }}
+                style={{width: "100%", height: 200, borderRadius: 10}}
+                resizeMode='cover'
+              />
             ) : (
               <View style={{ height: 200, paddingHorizontal: 4, backgroundColor: Colors.lightGray, borderRadius: 10, borderColor: Colors.primary, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <View style={{ borderStyle: 'dashed', borderWidth: 1, borderRadius: 8, borderColor: Colors.primary, width: 100, height: 100, justifyContent: 'center', alignItems: 'center' }}>
@@ -161,7 +194,7 @@ const Create = () => {
 
         <TouchableOpacity
           style={[defaultStyles.btn, { marginTop: 8 }]}
-          onPress={submit}
+          // onPress={}
           disabled={uploading}
         >
           <Text style={{ fontFamily: 'mon-sb', color: '#fff', fontSize: 16 }}>Submit & Publish</Text>

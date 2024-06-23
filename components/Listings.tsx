@@ -73,7 +73,7 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
             }}>
             <Animated.View style={styles.listing} entering={FadeInRight} exiting={FadeOutLeft}>
               <Animated.Image source={{ uri: `${API_URL}/listingimages/${item.image}` }} style={[styles.image, {backgroundColor: '#fff'}]} />
-              <TouchableOpacity style={{ position: 'absolute', right: 30, top: 30 }}>
+              <TouchableOpacity style={{ position: 'absolute', backgroundColor: '#fff', borderRadius: 25, padding: 4, alignItems: 'center', right: 30, top: 30 }}>
                 <Ionicons name="heart-outline" size={24} color="#000" />
               </TouchableOpacity>
               <View style={{ flex: 1, padding: 12, gap: 6, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', paddingHorizontal: 6, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 200,
+    height: 250,
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,
   },
