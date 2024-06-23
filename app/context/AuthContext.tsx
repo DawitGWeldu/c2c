@@ -12,7 +12,7 @@ interface AuthProps {
     onResendOTP?: (phoneNumber: string) => Promise<any>
     onLogout?: () => Promise<any>
 }
-const TOKEN_KEY = 'auth-jwt'
+const TOKEN_KEY = 'Secret'
 export const API_URL = 'http://192.168.137.1:5000'
 
 const AuthContext = createContext<AuthProps>({})

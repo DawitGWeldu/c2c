@@ -9,6 +9,8 @@ import { TouchableOpacity, SafeAreaView, useColorScheme, View, ActivityIndicator
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import { Buffer } from 'buffer';
+
 
 const TOKEN_KEY = 'auth-jwt'
 
@@ -46,6 +48,23 @@ const toastConfig = {
     <BaseToast
       {...props}
       style={{ borderLeftColor: Colors.green, borderRadius: 10 }}
+      contentContainerStyle={{ paddingHorizontal: 15, borderRadius: 10 }}
+      text1Style={{
+        fontSize: 17,
+        fontFamily: 'mon-sb'
+      }}
+      text2Style={{
+        fontSize: 15,
+        fontFamily: 'mon',
+        fontWeight: '500'
+      }}
+    />
+  ),
+
+  info: (props: any) => (
+    <BaseToast
+      {...props}
+      style={{ borderLeftColor: '#4287f5', borderRadius: 10 }}
       contentContainerStyle={{ paddingHorizontal: 15, borderRadius: 10 }}
       text1Style={{
         fontSize: 17,
@@ -156,21 +175,44 @@ function RootLayoutNav() {
   useEffect(() => {
     const inAuthGroup = segments[0] === '(authenticated)';
 
+    const loadToken = async () => {
+      const token = await SecureStore.getItemAsync(TOKEN_KEY)
+      if (token) {
+        const decodedToken1 = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString())
+        const decodedToken2 = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
+        if (Date.now() > (decodedToken2.exp * 1000)) {
+          setTimeout(() => {
+            Toast.show({
+              type: 'info',
+              text1: "Session expired",
+              text2: "Please, login again"
+            });
+          }, 2000);
+          await SecureStore.deleteItemAsync(TOKEN_KEY)
+          router.replace('/login');
+        }
+      } else {
+        if (authState?.authenticated && !inAuthGroup) {
+          if (authState.phone_verified) {
+            router.replace('/(authenticated)/(tabs)');
+          }
+          else {
+            router.push({
+              pathname: '/verify/[phone]',
+              params: { phone: "+251994697123", signin: 'true' },
+            });
+          }
+        } else if (!authState?.authenticated) {
+          router.replace('/');
+        }
+      }
 
-    console.log("HERERE")
-    if (authState?.authenticated && !inAuthGroup) {
-      if (authState.phone_verified) {
-        router.replace('/(authenticated)/(tabs)');
-      }
-      else{
-        router.push({
-          pathname: '/verify/[phone]',
-          params: { phone: "+251994697123", signin: 'true' },
-        });
-      }
-    } else if (!authState?.authenticated) {
-      router.replace('/');
+
     }
+    loadToken()
+
+
+
   }, [authState?.authenticated, authState?.phone_verified]);
 
 

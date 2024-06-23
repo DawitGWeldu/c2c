@@ -52,13 +52,21 @@ const Page = () => {
 
     const phoneNumberWithSpaces = `${selectedCountry?.callingCode + phoneNumber}`
     const trimmedPhoneNumber = phoneNumberWithSpaces.replace(/\s/g, "");
-    const result = await onLogin!(trimmedPhoneNumber, password)
 
-    // console.log(JSON.stringify(result))
-    setIsLoading(false);
-    setPhoneNumber("");
-    setPassword("");
-
+    const result = await onLogin!(trimmedPhoneNumber, password).catch((error) => {
+      console.log(error)
+      setIsLoading(false);
+      setPhoneNumber("");
+      setPassword("");
+      Toast.show({
+        type: "error",
+        text1: 'Error',
+        text1Style: {fontFamily: 'mon-sb'},
+        text2: error.msg,
+        text2Style: {fontFamily: 'mon'},
+      })
+      return
+    })
     if (result.success === "true") {
       if (JSON.parse(Buffer.from(result.token.split('.')[1], 'base64').toString()).phone_number_veified == false) {
         router.replace({
@@ -66,7 +74,7 @@ const Page = () => {
           params: { phone: trimmedPhoneNumber, signin: 'true' },
         });
       }
-    } else if(result.error) {
+    } else if (result.error) {
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -75,11 +83,18 @@ const Page = () => {
       });
     }
 
+    // console.log(JSON.stringify(result))
+    setIsLoading(false);
+    setPhoneNumber("");
+    setPassword("");
+
+
+
   };
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor:'#fff' }}
+      style={{ flex: 1, backgroundColor: '#fff' }}
       behavior="padding"
       keyboardVerticalOffset={keyboardVerticalOffset}>
       <View style={{ flex: 1, padding: 20, alignItems: 'center' }}>
