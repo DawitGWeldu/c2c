@@ -2,24 +2,26 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import * as SecureStore from 'expo-secure-store'
 import { Buffer } from 'buffer';
-
+import * as FileSystem from 'expo-file-system';
 
 interface AuthProps {
     authState?: { token: string | null, authenticated: boolean | null, phone_verified: boolean | null }
-    onRegister?: ( name: string, phoneNumber: string, password: string) => Promise<any>
+    onRegister?: (name: string, phoneNumber: string, password: string) => Promise<any>
     onLogin?: (phoneNumber: string, password: string) => Promise<any>
     onVerifySignin?: (code: string) => Promise<any>
     onResendOTP?: (phoneNumber: string) => Promise<any>
     onLogout?: () => Promise<any>
 }
 const TOKEN_KEY = 'Secret'
-export const API_URL = 'http://192.168.137.1:5000'
+export const API_URL = 'http://192.168.244.53:5000'
 
-const AuthContext = createContext<AuthProps>({})
+export const AuthContext = createContext<AuthProps>({})
 
 export const useAuth = () => {
     return useContext(AuthContext)
 }
+
+
 
 export const AuthProvider = ({ children }: any) => {
     const [authState, setAuthState] = useState<{
@@ -55,11 +57,13 @@ export const AuthProvider = ({ children }: any) => {
 
     const register = async (name: string, phoneNumber: string, password: string) => {
         try {
-            console.log(name+phoneNumber+password)
-            const {data} = await axios.post(`${API_URL}/auth/register`, { name, phone_number: phoneNumber, password })
+            console.log(name + phoneNumber + password)
+            const { data } = await axios.post(`${API_URL}/auth/register`, { name, phone_number: phoneNumber, password })
+
             console.log(JSON.stringify(data))
 
             if (data.success) {
+
                 setAuthState({
                     token: data.token,
                     authenticated: true,
@@ -148,7 +152,11 @@ export const AuthProvider = ({ children }: any) => {
 
     const logout = async () => {
         await SecureStore.deleteItemAsync(TOKEN_KEY)
-
+        setAuthState({
+            token: "",
+            authenticated: false,
+            phone_verified: false
+        })
         axios.defaults.headers.common['Authorization'] = ''
 
         setAuthState({

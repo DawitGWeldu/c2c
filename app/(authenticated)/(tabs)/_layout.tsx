@@ -9,7 +9,7 @@ const Layout = () => {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors.primary,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
         tabBarLabelStyle: {
           fontFamily: 'mon-sb',
         },
@@ -17,14 +17,15 @@ const Layout = () => {
       <Tabs.Screen
         name="index"
         options={{
-          tabBarLabel: 'Explore',
+          tabBarLabel: 'Home',
           tabBarIcon: ({ size, color }) => <MaterialIcons name="home" size={32} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="whishlists"
+        name="myposts"
         options={{
-          tabBarLabel: 'My Listings',
+          headerShown: false,
+          tabBarLabel: 'My posts',
           tabBarIcon: ({ size, color }) => (
             <MaterialIcons name="luggage" size={30} color={color} />
           ),
@@ -52,10 +53,10 @@ const Layout = () => {
       <Tabs.Screen
         name="profile"
         options={{
-          tabBarLabel: 'Tasks',
+          tabBarLabel: 'profile',
           headerShown: false,
           tabBarIcon: ({ size, color }) => (
-            <MaterialIcons name="task" size={size} color={color} />
+            <MaterialIcons name="person" size={size} color={color} />
           ),
         }}
       />

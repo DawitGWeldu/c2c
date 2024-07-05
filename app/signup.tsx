@@ -1,8 +1,8 @@
 import Colors from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -23,7 +23,19 @@ import { Buffer } from 'buffer';
 import * as DocumentPicker from "expo-document-picker";
 import Toast from 'react-native-toast-message';
 
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { ScrollView } from 'react-native-gesture-handler';
 
+
+const imgDir = FileSystem.documentDirectory + 'images/';
+
+const ensureDirExists = async () => {
+  const dirInfo = await FileSystem.getInfoAsync(imgDir);
+  if (!dirInfo.exists) {
+    await FileSystem.makeDirectoryAsync(imgDir, { intermediates: true });
+  }
+};
 
 
 const Page = () => {
@@ -35,31 +47,86 @@ const Page = () => {
   });
 
 
-  const openPicker = async (selectType: any) => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type:
-        selectType === "image"
-          ? ["image/png", "image/jpg"]
-          : ["video/mp4", "video/gif"],
+
+  const [uploading, setUploading] = useState(false);
+  const [images, setImages] = useState<any[]>([]);
+
+
+
+
+  useEffect(() => {
+    loadImages();
+  }, []);
+
+
+
+
+  // Save image to file system
+  const saveImage = async (uri: string) => {
+    await ensureDirExists();
+    if(images) {
+      deleteImage(images[images.length -1])
+    }
+    const filename = new Date().getTime() + '.jpeg';
+    const dest = imgDir + filename;
+    await FileSystem.copyAsync({ from: uri, to: dest });
+    setImages([...images, dest]);
+  };
+
+  // Upload image to server
+  const uploadImage = async (uri: string) => {
+    setUploading(true);
+
+    await FileSystem.uploadAsync('http://192.168.1.52:8888/upload.php', uri, {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: 'file'
     });
 
-    if (!result.canceled) {
-      if (selectType === "image") {
-        setForm({
-          ...form,
-          idPhoto: result.assets[0],
-        });
-      }
-    } else {
-      setTimeout(() => {
-        Toast.show({
-          type: 'info',
-          text1: "Document picked",
-          text2: JSON.stringify(result, null, 2)
-        });
-      }, 100);
+    setUploading(false);
+  };
+
+  // Delete image from file system
+  const deleteImage = async (uri: string) => {
+    await FileSystem.deleteAsync(uri);
+    setImages(images.filter((i) => i !== uri));
+  };
+
+
+
+
+  // Load images from file system
+  const loadImages = async () => {
+    await ensureDirExists();
+    const files = await FileSystem.readDirectoryAsync(imgDir);
+    if (files.length > 0) {
+      setImages(files.map((f) => imgDir + f));
     }
   };
+
+  // Select image from library or camera
+  const selectImage = async (useLibrary: boolean) => {
+    let result;
+    const options: ImagePicker.ImagePickerOptions = {
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.75
+    };
+
+    if (useLibrary) {
+      result = await ImagePicker.launchImageLibraryAsync(options);
+    } else {
+      await ImagePicker.requestCameraPermissionsAsync();
+      result = await ImagePicker.launchCameraAsync(options);
+    }
+
+    // Save image if not cancelled
+    if (!result.canceled) {
+      saveImage(result.assets[0].uri);
+    }
+
+  }
 
 
   const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 0;
@@ -125,7 +192,8 @@ const Page = () => {
       style={{ flex: 1 }}
       behavior="padding"
       keyboardVerticalOffset={keyboardVerticalOffset}>
-      <View style={[defaultStyles.container, { padding: 20, paddingHorizontal: 20 }]}>
+      <ScrollView style={{ flex: 1, padding: 20, paddingHorizontal: 20 }}>
+        {/* <View style={[defaultStyles.container, { padding: 20, paddingHorizontal: 20 }]}> */}
         <Text style={defaultStyles.header}>Create an account</Text>
         <Text style={defaultStyles.descriptionText}>
           After filling out the form and you will recieve a confirmation code to verify your phone number
@@ -247,17 +315,22 @@ const Page = () => {
             onChangeText={handlePassword}
           />
 
-          {/* <View style={{ width: '100%', flexDirection: 'column', gap: 8 }}>
+          <View style={{ width: '100%', flexDirection: 'column', gap: 8 }}>
             <Text style={{ color: Colors.dark, fontFamily: "mon" }}>
               Upload your ID
             </Text>
 
-            <TouchableOpacity onPress={() => openPicker("image")}>
-              {form.idPhoto ? (
+            
+            <TouchableOpacity style={{backgroundColor: "#fff", borderRadius: 25, padding: 5, alignItems: 'center', justifyContent: 'center', position: 'absolute', left: "43%", bottom: 20, zIndex: 1 }}>
+              <MaterialIcons name="clear" size={32} color={Colors.dark} />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => selectImage(false)}>
+              {images ? (
                 <Image
-                  source={{ uri: form.idPhoto.uri }}
-                  style={{ width: '100%', height: 64, borderRadius: 8 }}
-                  resizeMode={'cover'}
+                  source={{ uri: (images[images.length - 1]) }}
+                  style={{ width: '100%', height: 150, borderRadius: 8 }}
+                  resizeMode={'contain'}
                 />
               ) : (
                 <View style={{ height: 150, width: '100%', paddingHorizontal: 4, backgroundColor: Colors.lightGray, borderRadius: 10, borderColor: Colors.primary, justifyContent: 'center', alignItems: 'center' }}>
@@ -274,7 +347,7 @@ const Page = () => {
                 </View>
               )}
             </TouchableOpacity>
-          </View> */}
+          </View>
 
         </View>
 
@@ -291,7 +364,8 @@ const Page = () => {
         </TouchableOpacity>
 
         <View style={{ flex: 1 }} />
-      </View>
+        {/* </View> */}
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };

@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { Buffer } from 'buffer';
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity, Share, ActivityIndicator, ScrollView } from 'react-native';
@@ -27,9 +27,12 @@ const DetailsPage = () => {
   const { slug } = useLocalSearchParams<{ slug: string, item: string }>();
 
   const [listing, setListing] = useState<any>(undefined)
+  const [user, setUser] = useState<any>(undefined)
   const [joinedDate, setJoinedDate] = useState<any>(undefined)
   const [loading, setLoading] = useState(true)
   const { authState } = useAuth()
+  const router = useRouter()
+
 
   // const handleRefresh = async () => {
   //   try {
@@ -61,6 +64,8 @@ const DetailsPage = () => {
         setLoading(true)
         const token = authState!.token
         const activeUser = JSON.parse(Buffer.from(token!.split('.')[1], 'base64').toString())
+        setUser(activeUser.id)
+
         // console.log("hererere: " + JSON.stringify(activeUser))
 
         const { data } = await axios.post(`${API_URL}/listing/${slug}`, {
@@ -143,20 +148,28 @@ const DetailsPage = () => {
 
     (!listing ?
       <LinearGradient colors={["#f3f7f7", "#dee4f7"]}
-        style={{ flex: 1, paddingTop: 50 }}><View><ActivityIndicator size={'large'} color={Colors.primary}></ActivityIndicator></View></LinearGradient>
+        style={{ flex: 1, paddingTop: 50 }}><View style={{ alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={'large'} color={Colors.primary}></ActivityIndicator></View></LinearGradient>
       :
       <LinearGradient colors={["#fff", "#f3f7f7"]}
-        style={{ flex: 1, paddingTop: 50 }}>
+        style={{ flex: 1 }}>
         <View style={styles.container}>
           <ScrollView
             contentContainerStyle={{ paddingBottom: 100 }}
             // ref={scrollRef}
             scrollEventThrottle={16}>
             <Image
-              source={{ uri: `${API_URL + "/listingimages/" + listing.image}` }}
+              source={{ uri: listing.image }}
               style={[styles.image]}
               resizeMode="cover"
             />
+            {user == listing.user._id &&
+              <View style={[listing.paymentVerified ? { backgroundColor: Colors.green } : { backgroundColor: "#e3c334" }, { paddingHorizontal: 10, paddingVertical: 4, flexDirection: 'row', justifyContent: 'space-between' }]}>
+                <Text style={{ marginTop: 12, fontFamily: 'mon-sb', }}>Payment status</Text>
+                <Text style={{ marginTop: 12, fontFamily: 'mon-sb', }}>{!listing.paymentVerified ? "pending" : "verified"}</Text>
+              </View>
+            }
+
+
 
 
 
@@ -168,7 +181,7 @@ const DetailsPage = () => {
               <Text style={styles.description}>{listing.description}</Text>
               {/* <View style={styles.divider} /> */}
 
-              <View style={styles.hostView}>
+              {!user == listing.user._id && <View style={styles.hostView}>
                 <Image source={{ uri: `${API_URL}/userphotos/${listing.user.id_photo}` }} style={styles.host} />
 
                 <View>
@@ -185,28 +198,45 @@ const DetailsPage = () => {
 
                   </View>
                 </View>
-              </View>
+              </View>}
+
 
 
               <Text style={{ marginVertical: 8, fontFamily: 'mon-sb', fontSize: 18 }}>Item information</Text>
               <View style={styles.divider} />
 
-              <Text style={{ fontFamily: 'mon', fontSize: 15 }}>
+              <Text style={{ fontFamily: 'mon', fontSize: 17 }}>
 
-                <MaterialIcons name='flight-takeoff' color={Colors.green} />
+                <MaterialIcons name='flight-takeoff' size={20} color={Colors.green} />
                 {" "}
                 From {listing.origin}
               </Text>
-              <Text style={{ fontFamily: 'mon', fontSize: 15 }}>
-                <MaterialIcons name='flight-land' color={Colors.primary} />
+              <Text style={{ fontFamily: 'mon', fontSize: 17 }}>
+                <MaterialIcons name='flight-land' size={20} color={Colors.primary} />
                 {" "}
                 To {listing.destination}
               </Text>
-              <Text style={{ fontFamily: 'mon', fontSize: 15, marginTop: 10 }}>
+              <Text style={{ fontFamily: 'mon', fontSize: 17, marginTop: 10 }}>
                 <MaterialIcons name='scale' color={Colors.dark} />
                 {" "}
                 Weight:  {listing.weight}kg
               </Text>
+              {listing.items.length > 0 && (
+                <View style={{ marginVertical: 10, padding: 10, borderRadius: 10, backgroundColor: Colors.extraLightGray }}>
+
+                  <Text style={{ fontFamily: 'mon-sb', fontSize: 17, marginTop: 10 }}>
+                    List of Items
+                  </Text>
+
+                  {listing.items.map((item: any, key: any) => (
+                    <Text key={key} style={{ fontFamily: 'mon', fontSize: 17, marginTop: 10 }}>
+                      {" "}
+                      {item.name} {" "}
+                      Quantity:  {item.quantity}
+                    </Text>
+                  ))}
+                </View>
+              )}
               {/* <Text style={styles.rooms}>
               Fragile · Non-Perishable
             </Text> */}
@@ -227,7 +257,7 @@ const DetailsPage = () => {
 
               </View>
               {/* <View style={{ width: Dimensions.get('window').width - 48, height: 250 }}> */}
-                {/* <MapView
+              {/* <MapView
                 // scrollEnabled={false}
                 rotateEnabled={false}
                 animationEnabled={false}
@@ -252,9 +282,17 @@ const DetailsPage = () => {
                 <Text style={{ fontFamily: 'mon', fontSize: 10 }}>Remaining Bagage Allowance </Text>
               </View> */}
 
-              <TouchableOpacity style={[defaultStyles.btn, { paddingRight: 20, paddingLeft: 20 }]}>
-                <Text style={defaultStyles.btnText}>Interested <Ionicons name='hand-left' size={14} /></Text>
-              </TouchableOpacity>
+              {user == listing.user._id ?
+                <TouchableOpacity style={[defaultStyles.btn, { paddingHorizontal: 20, flexDirection: 'row', alignItems: "center", justifyContent: 'space-between', gap: 4, backgroundColor: "#e3c334" }]}>
+                  <Ionicons name='cash' size={14} color={'#fff'} />
+
+                  {!listing.paymentVerified && <Text style={defaultStyles.btnText}>Pay </Text>}
+                </TouchableOpacity> :
+                <TouchableOpacity style={[defaultStyles.btn, { paddingHorizontal: 20, flexDirection: 'row', alignItems: "center", justifyContent: 'space-between', gap: 4 }]}>
+
+                  <Text style={defaultStyles.btnText}> Interested </Text>
+                </TouchableOpacity>}
+
             </View>
           </View>
         </View>
@@ -338,7 +376,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 50,
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255,255,255,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
     color: Colors.primary,

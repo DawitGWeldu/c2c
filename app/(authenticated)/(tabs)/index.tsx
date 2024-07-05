@@ -51,7 +51,6 @@ const Page = () => {
   const [category, setCategory] = useState<string>('Home');
 
   const handleRefresh = async () => {
-    console.log("Here")
     try {
       const { data } = await axios.get(`${API_URL}/listing/getAllListings`)
       console.log(data)
@@ -100,11 +99,11 @@ const Page = () => {
                   {items.length > 0 ?
                     <ListingsBottomSheet listings={items} category={category} />
                     :
-                    <View style={{ flex: 1, alignItems: 'center', flexDirection: 'column', justifyContent: 'center', gap: 30 }}>
+                    <View style={{ flex: 1, height: 500, alignItems: 'center', flexDirection: 'column', justifyContent: 'center', gap: 10}}>
                       <Text style={{ fontFamily: 'mon-sb' }}>Nothing to show</Text>
                       {/* <Text style={{ fontFamily: "mon" }}></Text> */}
-                      <TouchableOpacity onPress={handleRefresh} style={defaultStyles.pillButtonSmall}>
-                        <Ionicons size={50} name='reload-circle' />
+                      <TouchableOpacity onPress={handleRefresh} style={{ backgroundColor: Colors.lightGray, padding: 8, borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons size={32} name='reload' />
                       </TouchableOpacity>
                     </View>}
                 </>

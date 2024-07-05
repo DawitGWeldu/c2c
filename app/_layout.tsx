@@ -5,7 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import ModalHeaderText from '@/components/ModalHeaderText';
-import { TouchableOpacity, SafeAreaView, useColorScheme, View, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, SafeAreaView, useColorScheme, Text, View, ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
@@ -287,6 +287,29 @@ function RootLayoutNav() {
           headerTransparent: true,
           headerBackVisible: false,
           headerTitle: (props) => <ModalHeaderText />,
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
+                backgroundColor: '#fff',
+                borderColor: Colors.gray,
+                borderRadius: 20,
+                borderWidth: 1,
+                padding: 4,
+              }}>
+              <Ionicons name="close-outline" size={22} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="(authenticated)/(modals)/uploadPayment/[id]"
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'fade',
+          headerTransparent: true,
+          headerBackVisible: false,
+          headerTitle: (props) => <Text style={{paddingHorizontal: 24, fontFamily: 'mon-sb'}}>Verify payment</Text>,
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.back()}

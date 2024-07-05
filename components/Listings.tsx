@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ListRenderItem, TouchableOpacity, Image, Dimensions, FlatList, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ListRenderItem, TouchableOpacity, Image, Dimensions, FlatList, ScrollView, RefreshControl } from 'react-native';
 import { defaultStyles } from '@/constants/Styles';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
@@ -8,6 +8,8 @@ import { BottomSheetFlatList, BottomSheetFlatListMethods } from '@gorhom/bottom-
 import Colors from '@/constants/Colors';
 import { API_URL } from '@/app/context/AuthContext';
 import HomeBannerSlider from './HomeSlider';
+import axios from 'axios';
+import Toast from 'react-native-toast-message';
 
 interface Props {
   listings: any[];
@@ -19,6 +21,32 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
 
   // const listRef = useRef<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [listingss, setListingss] = useState([] as any)
+  const [refreshing, setRefreshing] = useState(true);
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    setLoading(true)
+    try {
+      const { data } = await axios.get(`${API_URL}/listing/getAllListings`)
+      // console.log(data)
+      setListingss(data.data)
+      setRefreshing(false)
+      setLoading(false)
+    } catch {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Couldn\'t fetch posts'
+      })
+      setRefreshing(false)
+      setLoading(false)
+
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
 
   // Update the view to scroll the list back top
   // useEffect(() => {
@@ -34,10 +62,8 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
   // Use for "updating" the views data after category changed
   useEffect(() => {
     setLoading(true);
-
-    setTimeout(() => {
-      setLoading(false);
-    }, 200);
+    handleRefresh()
+    setLoading(false);
   }, [category]);
 
   // Render one listing row for the FlatList
@@ -48,7 +74,11 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
   return (
 
 
-    <ScrollView>
+    <ScrollView
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
+    >
       <View style={{ marginHorizontal: 26 }}>
         <HomeBannerSlider />
 
@@ -61,7 +91,7 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
             <Ionicons name='filter' style={{ fontWeight: 'bold', fontSize: 20 }} />
           </TouchableOpacity>
         </View>
-        {items.map((item, index) => (
+        {listingss.map((item: any, index: any) => (
           <TouchableOpacity
             key={index}
             activeOpacity={1}
@@ -72,7 +102,7 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
               });
             }}>
             <Animated.View style={styles.listing} entering={FadeInRight} exiting={FadeOutLeft}>
-              <Animated.Image source={{ uri: `${API_URL}/listingimages/${item.image}` }} style={[styles.image, {backgroundColor: '#fff'}]} />
+              <Animated.Image source={{ uri: item.image }} style={[styles.image, { backgroundColor: '#fff' }]} />
               <TouchableOpacity style={{ position: 'absolute', backgroundColor: '#fff', borderRadius: 25, padding: 4, alignItems: 'center', right: 30, top: 30 }}>
                 <Ionicons name="heart-outline" size={24} color="#000" />
               </TouchableOpacity>
@@ -85,7 +115,7 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
                   <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
                     <Image source={{ uri: `${API_URL}/userphotos/${item.user.id_photo}` }} style={styles.host} />
                     <Text style={{ fontFamily: 'mon' }}>{item.user.name}</Text>
-                    <Ionicons name='checkmark-circle' color={Colors.primary}/>
+                    <Ionicons name='checkmark-circle' color={Colors.primary} />
                   </View>
                   <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
                     <MaterialIcons name="scale" style={{ color: '#000' }} size={16} />

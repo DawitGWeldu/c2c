@@ -25,21 +25,11 @@ const FormField = ({
           value={value}
           placeholder={placeholder}
           placeholderTextColor="#7B7B8B"
+          inputMode={title==="quantity" | title=== "Weight" | title=== "Price" && "numeric"}
           onChangeText={handleChangeText}
           secureTextEntry={title === "Password" && !showPassword}
           {...props}
         />
-
-        {title === "Password" && (
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <Ionicons
-              name={!showPassword ? "eye" : "eye-off"}
-              // name='eye'
-              className="w-6 h-6"
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        )}
       </View>
     </View>
   );

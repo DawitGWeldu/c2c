@@ -4,7 +4,7 @@ import Colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useAuth } from '@/app/context/AuthContext';
@@ -14,7 +14,7 @@ const categories = [
     name: 'All',
   },
   {
-    name: 'Listings',
+    name: 'Posts',
   },
   {
     name: 'Flights',
@@ -32,7 +32,7 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
   const scrollRef = useRef<ScrollView>(null);
   const itemsRef = useRef<Array<TouchableOpacity | null>>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const {onLogout} = useAuth()
+  const { onLogout } = useAuth()
   const selectCategory = (index: number) => {
     const selected = itemsRef.current[index];
     setActiveIndex(index);
@@ -43,24 +43,29 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
     onCategoryChanged(categories[index].name);
   };
 
-   const handleLogout = () => {
+  const handleLogout = () => {
     onLogout!()
   }
+  const router = useRouter();
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.container}>
         <View style={styles.actionRow}>
-          <Link href={'/(modals)/booking'} asChild>
-            <TouchableOpacity>
-              <View style={styles.searchBtn}>
-                <Ionicons name="search" size={24} />
-                <View>
-                  <Text style={{ fontFamily: 'mon-sb' }}>Search</Text>
-                  {/* <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text> */}
-                </View>
+          <TouchableOpacity onPress={(() => {
+            router.push({
+              pathname: '/(modals)/uploadPayment/[id]',
+              params: { id: "123" },
+            });
+          })}>
+            <View style={styles.searchBtn}>
+              <Ionicons name="search" size={24} />
+              <View>
+                <Text style={{ fontFamily: 'mon-sb' }}>Search</Text>
+                {/* <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text> */}
               </View>
-            </TouchableOpacity>
-          </Link>
+            </View>
+          </TouchableOpacity>
           <Pressable onPress={handleLogout} style={styles.filterBtn}>
             <Ionicons name="person" size={24} />
           </Pressable>
@@ -76,22 +81,22 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
             gap: 20,
             paddingHorizontal: 16,
           }}
-          >
+        >
           {categories.map((item, index) => (
-              <TouchableOpacity
-                ref={(el) => (itemsRef.current[index] = el)}
-                key={index}
-                style={activeIndex === index ? styles.categoriesBtnActive : styles.categoriesBtn}
-                onPress={() => selectCategory(index)}>
-                {/* <MaterialIcons
+            <TouchableOpacity
+              ref={(el) => (itemsRef.current[index] = el)}
+              key={index}
+              style={activeIndex === index ? styles.categoriesBtnActive : styles.categoriesBtn}
+              onPress={() => selectCategory(index)}>
+              {/* <MaterialIcons
                   name={item.icon as any}
                   size={24}
                   color={activeIndex === index ? '#000' : Colors.gray}
                 /> */}
-                <Text style={activeIndex === index ? styles.categoryTextActive : styles.categoryText}>
-                  {item.name}
-                </Text>
-              </TouchableOpacity>
+              <Text style={activeIndex === index ? styles.categoryTextActive : styles.categoryText}>
+                {item.name}
+              </Text>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
@@ -105,7 +110,7 @@ const styles = StyleSheet.create({
     height: 120,
     gap: 8,
     paddingTop: 16,
-  
+
   },
   actionRow: {
     flexDirection: 'row',
@@ -125,7 +130,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#c2c2c2',
     borderRadius: 60,
-    
+
   },
   filterBtn: {
     padding: 10,
