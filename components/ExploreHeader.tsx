@@ -32,7 +32,7 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
   const scrollRef = useRef<ScrollView>(null);
   const itemsRef = useRef<Array<TouchableOpacity | null>>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const { onLogout } = useAuth()
+  const { onLogout } = useAuth() as any
   const selectCategory = (index: number) => {
     const selected = itemsRef.current[index];
     setActiveIndex(index);
@@ -44,7 +44,7 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
   };
 
   const handleLogout = () => {
-    onLogout!()
+    onLogout()
   }
   const router = useRouter();
 
@@ -54,8 +54,7 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
         <View style={styles.actionRow}>
           <TouchableOpacity onPress={(() => {
             router.push({
-              pathname: '/(modals)/uploadPayment/[id]',
-              params: { id: "123" },
+              pathname: '/(modals)/pickLocation'
             });
           })}>
             <View style={styles.searchBtn}>

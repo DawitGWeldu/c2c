@@ -13,7 +13,7 @@ interface AuthProps {
     onLogout?: () => Promise<any>
 }
 const TOKEN_KEY = 'Secret'
-export const API_URL = 'http://192.168.244.53:5000'
+export const API_URL = 'http://192.168.231.53:5000'
 
 export const AuthContext = createContext<AuthProps>({})
 
@@ -129,10 +129,8 @@ export const AuthProvider = ({ children }: any) => {
         try {
             const { data } = await axios.post(`${API_URL}/auth/login`, { phone_number: phoneNumber, password })
 
-            // console.log(data)
             if (data.success) {
                 const decodedToken = JSON.parse(Buffer.from(data.token.split('.')[1], 'base64').toString())
-                // console.log(decodedToken)
                 setAuthState({
                     token: data.token,
                     authenticated: true,

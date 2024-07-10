@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, ListRenderItem, TouchableOpacity, Image, Dimensions, FlatList, ScrollView, RefreshControl, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ListRenderItem, TouchableOpacity, Image, Dimensions, FlatList, ScrollView, RefreshControl, TextInput, ActivityIndicator } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { defaultStyles } from '@/constants/Styles';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { BottomSheetFlatList, BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
 import Colors from '@/constants/Colors';
 import { API_URL, useAuth } from '@/app/context/AuthContext';
@@ -41,7 +41,7 @@ const Page = ({ onCategoryChanged }: Props) => {
   const [user, setUser] = useState(null as any);
   const { authState } = useAuth();
   const [listingss, setListingss] = useState([] as any)
-  const [refreshing, setRefreshing] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
   const itemsRef = useRef<Array<TouchableOpacity | null>>([]);
@@ -49,52 +49,43 @@ const Page = ({ onCategoryChanged }: Props) => {
 
 
 
-  useLayoutEffect(() => {
+  useMemo(() => {
+    setLoading(true)
     const getUser = async () => {
       try {
-        const { data } = await axios.get(`${API_URL}/user/profile`)
-        console.log("User: ", data)
-        setUser(data.data)
-        setRefreshing(false)
-        setLoading(false)
-      } catch {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Couldn\'t fetch posts'
+        await axios.get(`${API_URL}/user/profile`).then((res) => {
+          setUser(res.data.data)
+          console.log("USERERERHGTGH: ", res.data.data)
         })
-        setRefreshing(false)
-        setLoading(false)
 
+      } catch (e) {
+        console.log("ERROR, getUser", e)
       } finally {
         setLoading(false)
-        setRefreshing(false)
       }
     }
-    getUser().then(() => handleRefresh())
-  }, [authState])
-  const navigation = useNavigation();
-  const focused = navigation.isFocused();
+    getUser()
+  }, [])
 
-  // useEffect(() => {
-  //   const unsubscribe = navigation.addListener('focus', () => {
-  //     handleRefresh()
-  //     console.log('authstate updated');
-  //   });
+  useEffect(() => {
+    setLoading(true)
 
-  //   return unsubscribe;
-  // }, [authState]);
+    const load = async () => {
+      if (user) {
+        await handleRefresh()
+      }
+    }
+    load()
+    setLoading(false)
+  }, [user])
+
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    setLoading(true)
-    await axios.get(`${API_URL}/listing/getalllistings`)
+    // console.log("USER: ", user._id)
+    await axios.get(`${API_URL}/listing/getalluserlistings/?user=${user._id}`)
       .then((res) => {
-        const unfiltered = res.data.data
-        console.log("Then, Unfiltered", JSON.stringify(unfiltered))
-
-        const filteredListings = unfiltered.filter((listing: any) => listing.user._id == user._id);
-        console.log("Then, filtered: ", JSON.stringify(filteredListings))
+        const filteredListings = res.data.data
         if (filteredListings.length === 0) {
           Toast.show({
             type: 'info',
@@ -107,19 +98,16 @@ const Page = ({ onCategoryChanged }: Props) => {
         }
       })
       .catch((e) => {
-        console.log("ERROR: ",e)
+        console.log("ERROR: ", e)
         Toast.show({
           type: 'error',
           text1: 'Error',
-          text2: 'Couldn\'t fetch postas'
+          text2: 'Couldn\'t fetch posts'
         })
       })
       .finally(() => {
         setRefreshing(false)
-        setLoading(false)
       })
-
-
   }
 
 
@@ -145,93 +133,98 @@ const Page = ({ onCategoryChanged }: Props) => {
   return (
     <SafeAreaView>
       <ScrollView
+        style={{ width: '100%', height: '100%' }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
-        <View style={{ marginHorizontal: 26 }}>
 
+        {listingss && !loading ?
+          <View style={{}}>
+            {user &&
+              <View style={{ flex: 1, padding: 10, paddingTop: 24, flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
 
-        </View>
-        <View style={{}}>
-          {user &&
-            <View style={{ flex: 1, padding: 10, paddingTop: 24, flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
-
-              {/* <Image source={{ uri: `${API_URL}/userphotos/${user.id_photo}` }} style={{
+                {/* <Image source={{ uri: `${API_URL}/userphotos/${user.id_photo}` }} style={{
               width: 40,
               height: 40,
               borderRadius: 25,
               backgroundColor: Colors.gray,
             }} /> */}
-              <Text style={{ fontFamily: 'mon-sb', fontSize: 24, marginBottom: 24 }}>Welcome, {user.name}</Text>
+                <Text style={{ fontFamily: 'mon-sb', fontSize: 24, marginBottom: 24 }}>Welcome, {user.name}</Text>
 
-              {/* <Text style={{ fontFamily: 'mon' }}>Here, you will find all your posts</Text> */}
-              {/* <Ionicons name='checkmark-circle' color={Colors.primary} /> */}
-            </View>}
+                {/* <Text style={{ fontFamily: 'mon' }}>Here, you will find all your posts</Text> */}
+                {/* <Ionicons name='checkmark-circle' color={Colors.primary} /> */}
+              </View>}
 
-          {listingss.length === 0 ?
-            <View style={{ flexDirection: 'column', marginTop: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
-              <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}> You don't have any posts yet.</Text>
-              <TouchableOpacity onPress={handleRefresh} style={{ backgroundColor: Colors.lightGray, padding: 8, borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons size={32} name='reload-outline' />
-              </TouchableOpacity>
-            </View>
-            :
-
-            <><View style={styles.searchBtn}>
-              <Ionicons name="search" size={24} />
-              <TextInput style={{ flex: 1 }} placeholder='Search'>
-                {/* <Text style={{ fontFamily: 'mon-sb' }}></Text> */}
-                {/* <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text> */}
-              </TextInput>
-            </View>
-              <View style={{ flexDirection: 'row', marginTop: 10, alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 32 }}>
-                <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}> My posts</Text>
-                <TouchableOpacity>
-                  <Ionicons name='filter' style={{ fontWeight: 'bold', fontSize: 20 }} />
+            {listingss.length === 0 ?
+              <View style={{ flexDirection: 'column', marginTop: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
+                <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}> You don't have any posts yet.</Text>
+                <TouchableOpacity onPress={handleRefresh} style={{ backgroundColor: Colors.lightGray, padding: 8, borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons size={32} name='reload-outline' />
                 </TouchableOpacity>
               </View>
-            </>
+              :
 
-
-
-          }
-
-          {listingss.map((item: any, index: any) => (
-            <TouchableOpacity
-              key={index}
-              activeOpacity={1}
-              onPress={() => {
-                router.push({
-                  pathname: `/listing/[slug]`,
-                  params: { slug: item.slug },
-                });
-              }}>
-              <Animated.View style={styles.listing} entering={FadeInRight} exiting={FadeOutLeft}>
-                <Animated.Image source={{ uri: item.image }} style={[styles.image, { backgroundColor: '#fff' }]} />
-                <TouchableOpacity style={{ position: 'absolute', backgroundColor: '#fff', borderRadius: 25, padding: 4, alignItems: 'center', right: 30, top: 30 }}>
-                  <Ionicons name="heart-outline" size={24} color="#000" />
-                </TouchableOpacity>
-                <View style={{ flex: 1, padding: 12, gap: 6, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', paddingHorizontal: 6, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
-                  <Text numberOfLines={1} ellipsizeMode='tail' style={{ width: 300, fontSize: 16, fontFamily: 'mon-sb' }}>{item.title}</Text>
-                  <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 8, alignItems: 'center' }}>
-                    <Text numberOfLines={2} style={{ fontFamily: 'mon', color: "#777" }}>{item.description} </Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', padding: 6, alignItems: 'center' }}>
-                    <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-                      {/* <Image source={{ uri: `${API_URL}/userphotos/${item.user.id_photo}` }} style={styles.host} /> */}
-                      <Text style={{ fontFamily: 'mon' }}>Payment Status</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-                      {item.paymentVerified ? (<><Text>verified</Text><Ionicons name='checkmark-circle' color={Colors.primary} /></>) : (<><Text style={{ fontFamily: "mon-sb", color: "#e3c334" }}>pending</Text></>)}
-                    </View>
-                  </View>
+              <><View style={styles.searchBtn}>
+                <Ionicons name="search" size={24} />
+                <TextInput style={{ flex: 1 }} placeholder='Search'>
+                  {/* <Text style={{ fontFamily: 'mon-sb' }}></Text> */}
+                  {/* <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text> */}
+                </TextInput>
+              </View>
+                <View style={{ flexDirection: 'row', marginTop: 10, alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 32 }}>
+                  <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}> My posts</Text>
+                  <TouchableOpacity>
+                    <Ionicons name='filter' style={{ fontWeight: 'bold', fontSize: 20 }} />
+                  </TouchableOpacity>
                 </View>
+              </>
 
-              </Animated.View>
-            </TouchableOpacity>
-          ))}
-        </View>
+
+
+            }
+
+            {listingss.map((item: any, index: any) => (
+              <TouchableOpacity
+                key={index}
+                activeOpacity={1}
+                onPress={() => {
+                  router.push({
+                    pathname: `/listing/[slug]`,
+                    params: { slug: item.slug },
+                  });
+                }}>
+                <Animated.View style={styles.listing} entering={FadeInRight} exiting={FadeOutLeft}>
+                  <Animated.Image source={{ uri: item.image }} style={[styles.image, { backgroundColor: '#fff' }]} />
+                  <TouchableOpacity style={{ position: 'absolute', backgroundColor: '#fff', borderRadius: 25, padding: 4, alignItems: 'center', right: 30, top: 30 }}>
+                    <Ionicons name="heart-outline" size={24} color="#000" />
+                  </TouchableOpacity>
+                  <View style={{ flex: 1, padding: 12, gap: 6, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', paddingHorizontal: 6, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
+                    <Text numberOfLines={1} ellipsizeMode='tail' style={{ width: 300, fontSize: 16, fontFamily: 'mon-sb' }}>{item.title}</Text>
+                    <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 8, alignItems: 'center' }}>
+                      <Text numberOfLines={2} style={{ fontFamily: 'mon', color: "#777" }}>{item.description} </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', padding: 6, alignItems: 'center' }}>
+                      <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                        {/* <Image source={{ uri: `${API_URL}/userphotos/${item.user.id_photo}` }} style={styles.host} /> */}
+                        <Text style={{ fontFamily: 'mon' }}>Payment Status</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                        {item.paymentVerified ? (<><Text>verified</Text><Ionicons name='checkmark-circle' color={Colors.primary} /></>) : (<><Text style={{ fontFamily: "mon-sb", color: "#e3c334" }}>pending</Text></>)}
+                      </View>
+                    </View>
+                  </View>
+
+                </Animated.View>
+              </TouchableOpacity>
+            ))}
+          </View>
+          :
+          <View style={{ height: '100%', width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+            <ActivityIndicator color={Colors.primary} size={'large'} />
+            <Text>Getting your posts</Text>
+          </View>
+        }
       </ScrollView>
     </SafeAreaView>
   );

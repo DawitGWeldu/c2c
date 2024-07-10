@@ -10,9 +10,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Buffer } from 'buffer';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
-
-const TOKEN_KEY = 'auth-jwt'
+//@ts-ignore
+navigator.geolocation = require('@react-native-community/geolocation');
+const TOKEN_KEY = 'Secret'
 
 // Cache the Clerk JWT
 const tokenCache = {
@@ -108,11 +110,15 @@ export default function RootLayout() {
 
       <GestureHandlerRootView style={{ flex: 1 }}>
         <AuthProvider>
-          <RootLayoutNav />
-          <Toast
-            config={toastConfig} />
+          <BottomSheetModalProvider>
+
+            <RootLayoutNav />
+            <Toast
+              config={toastConfig} />
+          </BottomSheetModalProvider>
+
         </AuthProvider>
-      </GestureHandlerRootView>
+      </GestureHandlerRootView >
 
     </>
 
@@ -177,10 +183,12 @@ function RootLayoutNav() {
 
     const loadToken = async () => {
       const token = await SecureStore.getItemAsync(TOKEN_KEY)
+
       if (token) {
-        const decodedToken1 = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString())
-        const decodedToken2 = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
-        if (Date.now() > (decodedToken2.exp * 1000)) {
+        const decodedToken = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
+
+        if (Date.now() > (decodedToken.exp * 1000)) {
+
           setTimeout(() => {
             Toast.show({
               type: 'info',
@@ -190,21 +198,23 @@ function RootLayoutNav() {
           }, 2000);
           await SecureStore.deleteItemAsync(TOKEN_KEY)
           router.replace('/login');
+        } else {
+          if (authState?.authenticated && !inAuthGroup) {
+            if (authState.phone_verified) {
+              router.replace('/(authenticated)/(tabs)');
+            }
+            else {
+              router.push({
+                pathname: '/verify/[phone]',
+                params: { phone: "+251994697123", signin: 'true' },
+              });
+            }
+          } else if (!authState?.authenticated) {
+            router.replace('/');
+          }
         }
       } else {
-        if (authState?.authenticated && !inAuthGroup) {
-          if (authState.phone_verified) {
-            router.replace('/(authenticated)/(tabs)');
-          }
-          else {
-            router.push({
-              pathname: '/verify/[phone]',
-              params: { phone: "+251994697123", signin: 'true' },
-            });
-          }
-        } else if (!authState?.authenticated) {
-          router.replace('/');
-        }
+        router.replace('/');
       }
 
 
@@ -309,7 +319,30 @@ function RootLayoutNav() {
           animation: 'fade',
           headerTransparent: true,
           headerBackVisible: false,
-          headerTitle: (props) => <Text style={{paddingHorizontal: 24, fontFamily: 'mon-sb'}}>Verify payment</Text>,
+          headerTitle: (props) => <Text style={{ paddingHorizontal: 24, fontFamily: 'mon-sb' }}>Verify payment</Text>,
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
+                backgroundColor: '#fff',
+                borderColor: Colors.gray,
+                borderRadius: 20,
+                borderWidth: 1,
+                padding: 4,
+              }}>
+              <Ionicons name="close-outline" size={22} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="(authenticated)/(modals)/pickLocation"
+        options={{
+          presentation: 'modal',
+          animation: 'fade',
+          headerTransparent: true,
+          headerBackVisible: false,
+          headerTitle: (props) => <Text style={{ paddingHorizontal: 24, fontFamily: 'mon-sb', color: '#fff' }}>Select location</Text>,
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.back()}
