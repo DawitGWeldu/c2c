@@ -13,12 +13,18 @@ const Layout = () => {
         tabBarLabelStyle: {
           fontFamily: 'mon-sb',
         },
-      }}>
+        tabBarStyle: {
+          backgroundColor: 'linear-gradient(90deg, rgba(243,247,247,1) 0%, rgba(222,228,247,1) 100%)',
+          height: 60,
+          paddingVertical: 4
+        }
+      }}
+      >
       <Tabs.Screen
         name="index"
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ size, color }) => <MaterialIcons name="home" size={32} color={color} />,
+          tabBarIcon: ({ size, color }) => <Ionicons name="home-outline" size={30} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -36,8 +42,8 @@ const Layout = () => {
         options={{
           headerShown: false,
           tabBarLabel: 'Create',
-          tabBarIconStyle: {borderRadius: 25, width: 70, fontWeight: 'bold', backgroundColor: Colors.primary},
-          tabBarIcon: ({ size, color }) => <Ionicons name="add" size={size} color={'#fff'} />,
+          tabBarIconStyle: {borderRadius: 50, width: 42, fontWeight: 'bold'},
+          tabBarIcon: ({ size, color }) => <Ionicons name="add-circle" size={40} color={color} />,
         }}
       />
       <Tabs.Screen

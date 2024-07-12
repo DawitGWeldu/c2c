@@ -209,12 +209,12 @@ const DetailsPage = () => {
 
                 <MaterialIcons name='flight-takeoff' size={20} color={Colors.green} />
                 {" "}
-                From {listing.origin}
+                From {listing.origin.name}
               </Text>
               <Text style={{ fontFamily: 'mon', fontSize: 17 }}>
                 <MaterialIcons name='flight-land' size={20} color={Colors.primary} />
                 {" "}
-                To {listing.destination}
+                To {listing.destination.name}
               </Text>
               <Text style={{ fontFamily: 'mon', fontSize: 17, marginTop: 10 }}>
                 <MaterialIcons name='scale' color={Colors.dark} />
@@ -253,24 +253,24 @@ const DetailsPage = () => {
               <View style={styles.divider} />
               <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 4 }}>
                 <MaterialIcons name='location-searching' size={18} />
-                <Text style={{ fontFamily: 'mon-sb', fontSize: 18 }}>Pickup Location</Text>
+                <Text style={{ fontFamily: 'mon-sb', fontSize: 18 }}>Pick up Location</Text>
 
               </View>
-              {/* <View style={{ width: Dimensions.get('window').width - 48, height: 250 }}> */}
-              {/* <MapView
-                // scrollEnabled={false}
-                rotateEnabled={false}
-                animationEnabled={false}
-                style={StyleSheet.absoluteFillObject}
-                initialRegion={{ latitude: parseFloat(listing.latitude), longitude: parseFloat(listing.longitude), latitudeDelta: 0.1, longitudeDelta: 0.1 }}>
-                <Marker
-                  coordinate={{
-                    latitude: parseFloat(listing.latitude),
-                    longitude: parseFloat(listing.longitude),
-                  }}
-                />
-              </MapView> */}
-              {/* </View> */}
+              <View style={{ width: Dimensions.get('window').width - 48, height: 250 }}>
+                <MapView
+                  // scrollEnabled={false}
+                  rotateEnabled={false}
+                  animationEnabled={false}
+                  style={StyleSheet.absoluteFillObject}
+                  initialRegion={{ latitude: listing.origin.lat, longitude: listing.origin.lng, latitudeDelta: 0.1, longitudeDelta: 0.1 }}>
+                  <Marker
+                    coordinate={{
+                      latitude: parseFloat(listing.origin.lat),
+                      longitude: parseFloat(listing.origin.lng),
+                    }}
+                  />
+                </MapView>
+              </View>
             </View>
           </ScrollView>
 

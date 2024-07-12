@@ -142,7 +142,7 @@ const Page = ({ onCategoryChanged }: Props) => {
         {listingss && !loading ?
           <View style={{}}>
             {user &&
-              <View style={{ flex: 1, padding: 10, paddingTop: 24, flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+              <View style={{ flex: 1, padding: 10, paddingTop: 24, flexDirection: 'column', gap: 4, alignItems: 'center' }}>
 
                 {/* <Image source={{ uri: `${API_URL}/userphotos/${user.id_photo}` }} style={{
               width: 40,
@@ -165,13 +165,14 @@ const Page = ({ onCategoryChanged }: Props) => {
               </View>
               :
 
-              <><View style={styles.searchBtn}>
-                <Ionicons name="search" size={24} />
-                <TextInput style={{ flex: 1 }} placeholder='Search'>
-                  {/* <Text style={{ fontFamily: 'mon-sb' }}></Text> */}
-                  {/* <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text> */}
-                </TextInput>
-              </View>
+              <>
+                <View style={styles.searchBtn}>
+                  <Ionicons name="search" size={24} />
+                  <TextInput style={{ flex: 1 }} placeholder='Search'>
+                    {/* <Text style={{ fontFamily: 'mon-sb' }}></Text> */}
+                    {/* <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text> */}
+                  </TextInput>
+                </View>
                 <View style={{ flexDirection: 'row', marginTop: 10, alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 32 }}>
                   <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}> My posts</Text>
                   <TouchableOpacity>
@@ -194,27 +195,28 @@ const Page = ({ onCategoryChanged }: Props) => {
                     params: { slug: item.slug },
                   });
                 }}>
-                <Animated.View style={styles.listing} entering={FadeInRight} exiting={FadeOutLeft}>
-                  <Animated.Image source={{ uri: item.image }} style={[styles.image, { backgroundColor: '#fff' }]} />
-                  <TouchableOpacity style={{ position: 'absolute', backgroundColor: '#fff', borderRadius: 25, padding: 4, alignItems: 'center', right: 30, top: 30 }}>
-                    <Ionicons name="heart-outline" size={24} color="#000" />
-                  </TouchableOpacity>
-                  <View style={{ flex: 1, padding: 12, gap: 6, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', paddingHorizontal: 6, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
-                    <Text numberOfLines={1} ellipsizeMode='tail' style={{ width: 300, fontSize: 16, fontFamily: 'mon-sb' }}>{item.title}</Text>
-                    <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 8, alignItems: 'center' }}>
+                <Animated.View style={[styles.listing, { flexDirection: 'row' }]} entering={FadeInRight} exiting={FadeOutLeft}>
+                  <Animated.Image source={{ uri: item.image }} style={{ width: '40%', height: 120, borderBottomLeftRadius: 10, borderTopLeftRadius: 10, backgroundColor: '#fff' }} />
+
+                  <View style={{ flex: 1, padding: 12, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', paddingHorizontal: 6, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
+                    <Text numberOfLines={1} style={{ width: 200, fontSize: 16, fontFamily: 'mon-sb' }}>{item.title}</Text>
+                    <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
                       <Text numberOfLines={2} style={{ fontFamily: 'mon', color: "#777" }}>{item.description} </Text>
                     </View>
-                    <View style={{ flexDirection: 'row', padding: 6, alignItems: 'center' }}>
-                      <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-                        {/* <Image source={{ uri: `${API_URL}/userphotos/${item.user.id_photo}` }} style={styles.host} /> */}
-                        <Text style={{ fontFamily: 'mon' }}>Payment Status</Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-                        {item.paymentVerified ? (<><Text>verified</Text><Ionicons name='checkmark-circle' color={Colors.primary} /></>) : (<><Text style={{ fontFamily: "mon-sb", color: "#e3c334" }}>pending</Text></>)}
+                    <View style={[defaultStyles.separator, {margin: 4}]}></View>
+                    <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                      <Text style={{ fontFamily: 'mon' }}>Payment</Text>
+
+                      <View style={{ backgroundColor: '#FFE000', borderRadius: 25, padding: 2, width: 100, alignItems: 'center', flexDirection: 'row' }}>
+                        <View style={{ gap: 4, alignItems: 'center' }}>
+                          {item.paymentVerified ? (<><Text>verified</Text><Ionicons name='checkmark-circle' color={Colors.primary} /></>) : (<View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><Ionicons name='hourglass' size={16} /><Text style={{ fontFamily: "mon" }}>pending</Text></View>)}
+                        </View>
                       </View>
                     </View>
                   </View>
-
+                  {/* <TouchableOpacity style={{ position: 'absolute', backgroundColor: '#222', borderRadius: 25, padding: 4, alignItems: 'center', right: 0, top: 30 }}>
+                    <Ionicons name="heart-outline" size={24} color="#000" />
+                  </TouchableOpacity> */}
                 </Animated.View>
               </TouchableOpacity>
             ))}
@@ -311,6 +313,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     padding: 10,
+    marginHorizontal: 16,
     alignItems: 'center',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#c2c2c2',

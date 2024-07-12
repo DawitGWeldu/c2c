@@ -1,10 +1,11 @@
-import { useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 
 import * as ImagePicker from "expo-image-picker";
 import { Buffer } from 'buffer';
 import { getApps, initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import React from "react";
+import * as Location from 'expo-location';
 import {
   ActivityIndicator,
   Button,
@@ -27,7 +28,7 @@ import { v4 as uuid } from "uuid";
 import Toast from "react-native-toast-message";
 import Colors from "@/constants/Colors";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { defaultStyles } from "@/constants/Styles";
 import { Handle } from "tamagui";
 import { ScrollView } from "react-native-gesture-handler";
@@ -36,6 +37,10 @@ import PhoneInput, {
 } from 'react-native-international-phone-number';
 import axios from "axios";
 import { API_URL, AuthContext } from "@/app/context/AuthContext";
+import BottomSheet, { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import MapView, { Marker } from 'react-native-maps';
+
 
 
 
@@ -66,6 +71,57 @@ LogBox.ignoreLogs([`Setting a timer for a long period`]);
 
 class App extends React.Component {
   static contextType = AuthContext;
+  bottomSheetModalRef
+  mapRef
+  placesRef
+  constructor(props: any) {
+    super(props);
+    this.mapRef = React.createRef()
+    this.placesRef = React.createRef()
+    this.bottomSheetModalRef = React.createRef();
+    this.state = {
+      image: "",
+      uploading: false,
+      form: {
+        title: "",
+        description: '',
+        price: '',
+        weight: "",
+        destination: undefined,
+        destinationCountry: null as (ICountry | null),
+        destinationPhoneNumber: "",
+        origin: undefined,
+        originCountry: null as (ICountry | null),
+        originPhoneNumber: "",
+
+      },
+      inputs: [{
+        key: 0,
+        value: {
+          name: "",
+          quantity: ""
+        }
+      }],
+      initialRegion: {
+        latitude: 37.78825,
+        longitude: -122.4324,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      },
+      selectedLocation: undefined,
+      errors: [{
+        input: null,
+        msg: null
+      }],
+      submitting: false
+    };
+  }
+  handleSheetChanges = (index: any) => {
+    this.setState({ selectedLocation: null })
+    console.log(this.state)
+
+    // this.bottomSheetModalRef.current.present()
+  };
 
   state = {
     image: "",
@@ -75,10 +131,10 @@ class App extends React.Component {
       description: '',
       price: '',
       weight: "",
-      destination: "",
+      destination: undefined,
       destinationCountry: null as (ICountry | null),
       destinationPhoneNumber: "",
-      origin: "",
+      origin: undefined,
       originCountry: null as (ICountry | null),
       originPhoneNumber: "",
 
@@ -90,19 +146,84 @@ class App extends React.Component {
         quantity: ""
       }
     }],
+    initialRegion: {
+      latitude: 37.78825,
+      longitude: -122.4324,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    },
+    selectedLocation: undefined,
     errors: [{
       input: null,
       msg: null
-    }]
+    }],
+    submitting: false
   };
 
-  // componentDidUpdate(prevProps:any, prevState:any) {
-  //   // Similar to useEffect dependency array
-  //   console.log(prevState.inputs.length + "----------" + this.state.inputs.length)
-  //   if (prevState.inputs.length !== this.state.inputs.length) {
-  //     // console.log("Inputs Updated: ", this.state.inputs); 
-  //   }
-  // }
+
+
+  handlePickLocation = async (input: string) => {
+
+    this.setState({ submitting: true })
+    try {
+      if (1 == 1) {
+        console.log("INPUT: ", input)
+        if (input == 'from') {
+          this.setState(prevState => ({
+            form: {                   // object that we want to update
+              // @ts-ignore
+              ...prevState.form,
+              origin: this.state.selectedLocation       // update the value of specific key
+            }
+          }))
+        } else if (input == 'to') {
+          this.setState(prevState => ({
+            form: {                   // object that we want to update
+              // @ts-ignore
+              ...prevState.form,
+              destination: this.state.selectedLocation       // update the value of specific key
+            }
+          }))
+        }
+        this.bottomSheetModalRef.current.dismiss()
+      }
+    } catch (e) {
+      console.log("error", e)
+    }
+
+    this.setState({ submitting: false })
+
+    // try {
+    //   const { data } = await axios.post(`${API_URL}/payment/addpayment`)
+
+    //   // console.log("Payment Saved",JSON.stringify(data))
+
+    //   if (data.success) {
+
+    //     router.replace('/(authenticated)/(tabs)/myposts')
+    //     Toast.show({
+    //       type: 'success',
+    //       text1: "Success",
+    //       text2: "Payment info uploaded"
+    //     })
+    //   }
+    //   setSubmitting(false)
+
+    // } catch (error) {
+    //   Toast.show({
+    //     type: 'error',
+    //     text1: "Error",
+    //     text2: "Something went wrong"
+    //   })
+    //   console.log(JSON.stringify(error))
+    //   setSubmitting(false)
+
+    // } finally {
+    //   setSubmitting(false)
+    // }
+
+  }
+
 
   handlephoneNumber(phoneNumber: string, origin: boolean) {
     if (origin) {
@@ -123,6 +244,29 @@ class App extends React.Component {
       }))
     }
   }
+
+
+  handleLocationSelect = (details: any) => {
+    console.log("DETAILS: ", { lat: details.geometry.location.lat, lng: details.geometry.location.lng, name: details.name })
+    // Focus the map on the selected region
+    this.mapRef.current.animateToRegion({
+      latitude: details.geometry.location.lat,
+      longitude: details.geometry.location.lng,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    }, 1000);
+
+    this.setState(prevState => ({
+      selectedLocation: {                   // object that we want to update
+        // @ts-ignore
+        ...prevState.selectedLocation,
+        lat: details.geometry.location.lat,
+        lng: details.geometry.location.lng,
+        name: details.name        // update the value of specific key
+
+      }
+    }))
+  };
 
   handleSelectedCountry(i: ICountry, origin: boolean) {
     if (origin) {
@@ -170,7 +314,6 @@ class App extends React.Component {
 
   };
   deleteHandler = (key: any) => {
-    console.log("keyeyeyeyeyey: ", key)
     const index = this.inputs.findIndex(input => input.key == key);
     if (index > -1) { // only splice array when item is found
       const filteredInputs = this.inputs.splice(index, 1); // 2nd parameter means remove one item only
@@ -220,8 +363,8 @@ class App extends React.Component {
     const imageLocalUri = this.state.image
     try {
       const imageRemoteUri = await this._uploadImagePicked(imageLocalUri)
-    } catch {
-      console.log("error")
+    } catch(e) {
+      console.log("error: ",e)
     }
     let items = [] as any
     this.inputs.forEach((input) => items.push({ name: input.value.name, quantity: input.value.quantity }));
@@ -268,7 +411,78 @@ class App extends React.Component {
     }
 
   }
+
+
   async componentDidMount() {
+    const getCurrentLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.log('Permission to access location was denied');
+          this.setState({
+            initialRegion: {
+              latitude: 37.78825,
+              longitude: -122.4324,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }
+          })
+          return;
+        }
+
+        const { coords } = await Location.getCurrentPositionAsync({});
+        this.setState({
+          initialRegion: {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }
+        })
+
+      } catch (error) {
+        console.log('Error getting current location:', error);
+        this.setState({
+          initialRegion: {
+            latitude: 37.78825,
+            longitude: -122.4324,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }
+        })
+
+      }
+    };
+
+    getCurrentLocation();
+    //@ts-ignore
+    // if (this.state.selectedLocation) {
+    //   console.log("this.state.selectedLocation: ", this.state.selectedLocation)
+
+    //   // const parsed = JSON.parse(this.props.selectedLocation)
+    //   //@ts-ignore
+    //   // if (this.props.input == 'from') {
+    //   // console.log("this.props.selectedLocation: ", this.props.selectedLocation)
+    //   // console.log("this.state.form.origin: ", this.state.form.origin)
+
+    //   if (this.props.selectedLocation != this.state.form.origin) {
+    //     const updatedForm = { ...this.state.form, destination: parsed };
+    //     this.setState({ form: updatedForm });
+
+    //     // console.log("HEREE: ", this.state.form.origin, this.state.form.destination)
+
+    //   }
+
+
+    //   // } else if (this.props.input == 'to') {
+    //   //   if (this.props.selectedLocation != this.state.form.destination) {
+
+    //   //     const updatedForm = { ...this.state.form, destination: parsed };
+    //   //     this.setState({ form: updatedForm });
+    //   //   }
+    //   // }
+
+    // }
     if (Platform.OS !== "web") {
       const {
         status,
@@ -289,6 +503,8 @@ class App extends React.Component {
 
 
 
+
+
   render() {
     let { image } = this.state
     let { form } = this.state
@@ -297,6 +513,7 @@ class App extends React.Component {
     return (
       <LinearGradient colors={["#f3f7f7", "#dee4f7"]}
         style={{ flex: 1, paddingTop: 50 }}>
+
         <ScrollView keyboardShouldPersistTaps={'handled'} style={{ padding: 16 }}>
           <Text style={{ fontFamily: 'mon-sb', fontSize: 24, color: Colors.dark }}>Create a post</Text>
 
@@ -406,25 +623,35 @@ class App extends React.Component {
                 weight: e
               }
             }))}
-            otherStyles={{ marginVertical: 10 }}
+            otherStyles={{ marginVertical: 16 }}
           />
 
-          <FormField
-            title="Origin"
-            value={this.state.form.origin}
-            placeholder="Origin country and city"
-            handleChangeText={(e: any) => this.setState(prevState => ({
-              form: {
-                // @ts-ignore
-                ...prevState.form,
-                origin: e
-              }
-            }))}
-            otherStyles={{ marginVertical: 10 }}
-          />
+          <View style={[{ flexDirection: 'column', paddingTop: 10, gap: 10 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <MaterialIcons name='flight-takeoff' size={20} />
+              <Text style={{ color: Colors.dark, fontFamily: 'mon-sb' }}>From</Text>
+            </View>
+            <TouchableOpacity style={{ flex: 1 }} onPress={() => {
+              //@ts-ignore
+              this.bottomSheetModalRef.current.present({ input: 'from' })
+            }}>
 
-          <Text style={{ fontFamily: 'mon-sb', marginVertical: 10 }}>Contact number at origin</Text>
+              <View style={{ height: 50, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: Colors.lightGray, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
 
+                {this.state.form.origin ?
+                  <Text style={[(this.state.form.origin ? { color: '#000' } : { color: '#aaa' }), { fontFamily: 'mon-sb' }]}>{this.state.form.origin?.name}</Text>
+                  :
+                  <>
+                    <Ionicons name='locate' size={20} style={{ color: '#aaa', marginRight: 8 }} />
+                    <Text style={{ color: '#aaa', fontFamily: 'mon-sb' }}>Select location from map</Text>
+                  </>
+                }
+
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={{ fontFamily: 'mon-sb', marginVertical: 16 }}>Contact number</Text>
           <PhoneInput
             placeholder="Enter phone"
             phoneInputStyles={{
@@ -499,22 +726,34 @@ class App extends React.Component {
               this.handleSelectedCountry(i, true)
             }}
           />
+          <View style={[defaultStyles.separator, { width: '100%', flex: 1, backgroundColor: Colors.primary, marginTop: 16 }]}></View>
 
-          <FormField
-            title="Destination"
-            value={this.state.form.destination}
-            placeholder="Destination country and city"
-            handleChangeText={(e: any) => this.setState(prevState => ({
-              form: {
-                // @ts-ignore
-                ...prevState.form,
-                destination: e
-              }
-            }))}
-            otherStyles={{ marginVertical: 14 }}
-          />
+          <View style={[{ flexDirection: 'column', paddingTop: 10, gap: 10 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <MaterialIcons name='flight-land' size={20} />
+              <Text style={{ color: Colors.dark, fontFamily: 'mon-sb' }}>To</Text>
+            </View>
+            <TouchableOpacity onPress={() => {
+              //@ts-ignore
+              this.bottomSheetModalRef.current.present({ input: 'to' })
+            }}>
 
-          <Text style={{ fontFamily: 'mon-sb', marginVertical: 10 }}>Contact number at the destination</Text>
+              <View style={{ height: 50, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: Colors.lightGray, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+
+                {this.state.form.destination ?
+                  <Text style={[(this.state.form.origin ? { color: '#000' } : { color: '#aaa' }), { fontFamily: 'mon-sb' }]}>{this.state.form.destination?.name}</Text>
+                  :
+                  <>
+                    <Ionicons name='locate' size={20} style={{ color: '#aaa', marginRight: 8 }} />
+                    <Text style={{ color: '#aaa', fontFamily: 'mon-sb' }}>Select location from map</Text>
+                  </>
+                }
+
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={{ fontFamily: 'mon-sb', marginVertical: 16 }}>Contact number</Text>
 
           <PhoneInput
             placeholder="Enter phone"
@@ -602,12 +841,12 @@ class App extends React.Component {
                 price: e
               }
             }))}
-            otherStyles={{ marginVertical: 10 }}
+            otherStyles={{ marginVertical: 16 }}
           />
 
           <View style={{ marginBottom: 40, marginTop: 10 }}>
             <TouchableOpacity
-              style={[defaultStyles.btn, { marginVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: "center" }]}
+              style={[defaultStyles.btn, (this.state.uploading && {backgroundColor: Colors.primaryMuted}) , { marginVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: "center" }]}
               // onPress={}
               disabled={this.state.uploading}
               onPress={this.handleSubmit}
@@ -618,6 +857,131 @@ class App extends React.Component {
           </View>
           {/* <StatusBar barStyle="default" /> */}
         </ScrollView>
+        <View style={styles.container}>
+
+          <BottomSheetModal
+            index={0}
+            enableDismissOnClose
+            enableContentPanningGesture={false}
+            enablePanDownToClose
+            ref={this.bottomSheetModalRef}
+            snapPoints={['60%']}
+            onChange={this.handleSheetChanges}
+            backdropComponent={({ style }) => (
+              <View style={[style, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]} />
+            )}
+          >
+            {(presentData: any) => (
+              <BottomSheetView>
+
+                <View style={{ paddingTop: 0 }}>
+
+                  <MapView style={{
+                    width: '100%',
+                    height: '100%',
+                  }}
+                    ref={this.mapRef}
+                    initialRegion={this.state.initialRegion}
+
+                  >
+                    {this.state.selectedLocation && (
+                      <Marker
+                        coordinate={{
+                          latitude: this.state.selectedLocation.lat,
+                          longitude: this.state.selectedLocation.lng,
+                        }}
+                        title={this.state.selectedLocation.name}
+                      />
+                    )}
+                  </MapView>
+                  <View style={{ position: 'absolute', top: 30, width: "100%", paddingHorizontal: 16 }}>
+                    <GooglePlacesAutocomplete
+                      currentLocation
+                      enablePoweredByContainer={false}
+                      currentLocationLabel="Your current location"
+                      keyboardShouldPersistTaps='handled'
+                      placeholder='Search for a location...'
+                      fetchDetails
+                      onPress={(data, details) => {
+                        this.handleLocationSelect(details)
+                      }}
+                      onFail={error =>
+                        <View style={{ flex: 1, backgroundColor: '#fff', padding: 10, borderBottomLeftRadius: 8, borderBottomRightRadius: 8 }}>
+                          <Text>Search failed, try again.</Text>
+                        </View>
+                      }
+                      onNotFound={() =>
+                        <View style={{ flex: 1, backgroundColor: '#fff', padding: 10, borderBottomLeftRadius: 8, borderBottomRightRadius: 8 }}>
+                          <Text>No results were found</Text>
+                        </View>
+                      }
+                      query={{
+                        key: 'AIzaSyAwKog5CijtSrF54wB8njIpZccR4YhjxXk',
+                        language: 'en',
+                      }}
+                      listEmptyComponent={
+                        <View style={{ flex: 1, backgroundColor: '#fff', padding: 10, borderBottomLeftRadius: 8, borderBottomRightRadius: 8 }}>
+                          <Text>No results were found</Text>
+                        </View>
+                      }
+                      ref={this.placesRef}
+
+                      styles={{
+                        container: {
+                          flex: 0,
+                        },
+                        listView: {
+                          backgroundColor: 'white',
+                          borderWidth: StyleSheet.hairlineWidth,
+                          borderColor: '#ccc',
+                          borderRadius: 8,
+                          maxHeight: 283,
+                        },
+                        row: {
+                          borderRadius: 8,
+                        },
+                        textInput: {
+                          height: 50,
+                          borderRadius: 8,
+                          borderWidth: StyleSheet.hairlineWidth,
+                          borderBlockColor: '#ccc',
+                          fontSize: 16,
+                        },
+                      }}
+                    />
+
+                  </View>
+
+                  {this.state.selectedLocation &&
+                    <View style={[defaultStyles.footer, { height: 130 }]}>
+                      <View
+                        style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'space-evenly', gap: 16 }}>
+                        {/*@ts-ignore */}
+                        {this.state.selectedLocation && <Text style={{ fontFamily: 'mon-sb', color: '#000' }}>{this.state.selectedLocation.name}</Text>}
+
+                        <TouchableOpacity
+                          style={[this.state.selectedLocation == null || this.state.submitting ? [defaultStyles.btn, { backgroundColor: Colors.primaryMuted }] : defaultStyles.btn, { paddingRight: 20, paddingLeft: 50 }]}
+                          disabled={this.state.selectedLocation == null || this.state.submitting}
+                          onPress={() => this.handlePickLocation(presentData?.data.input)}>
+                          <Ionicons
+                            name="locate"
+                            size={24}
+                            style={defaultStyles.btnIcon}
+                            color={'#fff'}
+                          />
+                          <Text style={defaultStyles.btnText}>Select Location</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  }
+                </View>
+
+              </BottomSheetView>
+
+            )}
+
+          </BottomSheetModal>
+        </View>
       </LinearGradient>
     );
   }
@@ -866,12 +1230,12 @@ const styles = StyleSheet.create({
     fontFamily: 'mon-sb',
   },
   divider: {
-    height: StyleSheet.hairlineWidth,
+    height: 1,
     backgroundColor: Colors.lightGray,
     marginVertical: 8
   },
   dividerVertical: {
-    width: StyleSheet.hairlineWidth,
+    width: 1,
     height: 10,
     backgroundColor: Colors.gray,
     marginHorizontal: 6,
@@ -921,7 +1285,7 @@ const styles = StyleSheet.create({
   header: {
     // backgroundColor: '#fff',
     height: 100,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 1,
     borderColor: Colors.gray,
   },
 
@@ -929,5 +1293,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 10,
     fontFamily: 'mon',
+  },
+  contentContainer: {
+    flex: 1,
+    alignItems: 'center',
   },
 });

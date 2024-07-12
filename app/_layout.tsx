@@ -111,12 +111,10 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <AuthProvider>
           <BottomSheetModalProvider>
-
             <RootLayoutNav />
             <Toast
               config={toastConfig} />
           </BottomSheetModalProvider>
-
         </AuthProvider>
       </GestureHandlerRootView >
 
@@ -320,29 +318,6 @@ function RootLayoutNav() {
           headerTransparent: true,
           headerBackVisible: false,
           headerTitle: (props) => <Text style={{ paddingHorizontal: 24, fontFamily: 'mon-sb' }}>Verify payment</Text>,
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{
-                backgroundColor: '#fff',
-                borderColor: Colors.gray,
-                borderRadius: 20,
-                borderWidth: 1,
-                padding: 4,
-              }}>
-              <Ionicons name="close-outline" size={22} />
-            </TouchableOpacity>
-          ),
-        }}
-      />
-      <Stack.Screen
-        name="(authenticated)/(modals)/pickLocation"
-        options={{
-          presentation: 'modal',
-          animation: 'fade',
-          headerTransparent: true,
-          headerBackVisible: false,
-          headerTitle: (props) => <Text style={{ paddingHorizontal: 24, fontFamily: 'mon-sb', color: '#fff' }}>Select location</Text>,
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.back()}

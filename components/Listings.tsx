@@ -81,52 +81,54 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
     >
       <View style={{ marginHorizontal: 26 }}>
         <HomeBannerSlider />
-
-
       </View>
       <View style={{}}>
-        <View style={{ flexDirection: 'row', marginTop: 24, alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 32 }}>
+        <View style={{ flexDirection: 'row', marginBottom: 8, marginTop: 16, alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 32 }}>
           <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}> Popular posts</Text>
           <TouchableOpacity>
             <Ionicons name='filter' style={{ fontWeight: 'bold', fontSize: 20 }} />
           </TouchableOpacity>
         </View>
-        {listingss.map((item: any, index: any) => (
-          <TouchableOpacity
-            key={index}
-            activeOpacity={1}
-            onPress={() => {
-              router.push({
-                pathname: `/listing/[slug]`,
-                params: { slug: item.slug },
-              });
-            }}>
-            <Animated.View style={styles.listing} entering={FadeInRight} exiting={FadeOutLeft}>
-              <Animated.Image source={{ uri: item.image }} style={[styles.image, { backgroundColor: '#fff' }]} />
-              <TouchableOpacity style={{ position: 'absolute', backgroundColor: '#fff', borderRadius: 25, padding: 4, alignItems: 'center', right: 30, top: 30 }}>
-                <Ionicons name="heart-outline" size={24} color="#000" />
-              </TouchableOpacity>
-              <View style={{ flex: 1, padding: 12, gap: 6, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', paddingHorizontal: 6, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
-                <Text numberOfLines={1} ellipsizeMode='tail' style={{ width: 300, fontSize: 16, fontFamily: 'mon-sb' }}>{item.title}</Text>
-                <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 8, alignItems: 'center' }}>
-                  <Text numberOfLines={2} style={{ fontFamily: 'mon', color: "#777" }}>{item.description} </Text>
-                </View>
-                <View style={{ flexDirection: 'row', padding: 6, alignItems: 'center' }}>
-                  <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-                    <Image source={{ uri: `${API_URL}/userphotos/${item.user.id_photo}` }} style={styles.host} />
-                    <Text style={{ fontFamily: 'mon' }}>{item.user.name}</Text>
-                    <Ionicons name='checkmark-circle' color={Colors.primary} />
+        <View style={{ flexDirection: 'row', padding: 8, flexWrap: 'wrap' }}>
+          {listingss.map((item: any, index: any) => (
+            <TouchableOpacity
+              style={{ width: '50%' }}
+              key={index}
+              activeOpacity={1}
+              onPress={() => {
+                router.push({
+                  pathname: `/listing/[slug]`,
+                  params: { slug: item.slug },
+                });
+              }}>
+              <Animated.View style={styles.listing} entering={FadeInRight} exiting={FadeOutLeft}>
+                <Animated.Image source={{ uri: item.image }} style={[styles.image, { backgroundColor: '#fff' }]} />
+                <TouchableOpacity style={{ position: 'absolute', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 25, padding: 4, alignItems: 'center', right: 20, top: 20 }}>
+                  <Ionicons name="heart-outline" size={24} color="#000" />
+                </TouchableOpacity>
+                <View style={{ flex: 1, padding: 8, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
+                  <View style={{height: 70}}>
+                  <Text numberOfLines={1} ellipsizeMode='tail' style={{ paddingHorizontal: 8, width: 150, fontSize: 16, fontFamily: 'mon-sb' }}>{item.title}</Text>
+                  <Text numberOfLines={2} style={{paddingHorizontal: 8, fontFamily: 'mon', color: "#777" }}>{item.description} </Text>
                   </View>
-                  <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-                    <MaterialIcons name="scale" style={{ color: '#000' }} size={16} />
-                    <Text style={{ fontFamily: 'mon', color: '#000' }}>{item.weight} kg</Text>
+                  <View style={defaultStyles.separator}></View>
+                  <View style={{ flexDirection: 'row', padding: 6, alignItems: 'center' }}>
+                    <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                      <Image source={{ uri: `${API_URL}/userphotos/${item.user.id_photo}` }} style={styles.host} />
+                      <Text style={{ fontFamily: 'mon' }}>{item.user.name}</Text>
+                      <Ionicons name='checkmark-circle' color={Colors.primary} />
+                    </View>
+                    {/* <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                      <MaterialIcons name="scale" style={{ color: '#000' }} size={16} />
+                      <Text style={{ fontFamily: 'mon', color: '#000' }}>{item.weight} kg</Text>
+                    </View> */}
                   </View>
                 </View>
-              </View>
 
-            </Animated.View>
-          </TouchableOpacity>
-        ))}
+              </Animated.View>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
     </ScrollView>
 
@@ -135,12 +137,13 @@ const Listings = ({ listings: items, refresh, category }: Props) => {
 
 const styles = StyleSheet.create({
   listing: {
-    padding: 16,
+    padding: 8,
     marginTop: 0,
+    height: 310,
   },
   image: {
     width: '100%',
-    height: 250,
+    height: 170,
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,
   },
@@ -151,8 +154,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   host: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     borderRadius: 25,
     backgroundColor: Colors.gray,
   },

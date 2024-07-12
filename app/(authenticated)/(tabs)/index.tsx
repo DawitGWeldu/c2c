@@ -2,7 +2,7 @@ import { View, Text, ActivityIndicator } from 'react-native';
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import ListingsBottomSheet from '@/components/ListingsBottomSheet';
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import ExploreHeader from '@/components/ExploreHeader';
 import axios from 'axios'
 import { API_URL } from '@/app/context/AuthContext';
@@ -16,7 +16,16 @@ import HomeBannerSlider from '@/components/HomeSlider';
 const Page = () => {
   const [items, setItems]: any = useState();
   const [loading, setLoading] = useState(false)
+  const { selectedLocation } = useLocalSearchParams();
 
+
+  useEffect(() => {
+    if (selectedLocation) {
+      // Do something with the selected location
+      //@ts-ignore
+      console.log("Selected location, Explore:", JSON.parse(selectedLocation));
+    }
+  }, [selectedLocation]);
   // useLayoutEffect(() => {
   //   const showLoader = () => {
   //     if(loading) {
@@ -80,7 +89,6 @@ const Page = () => {
             header: () => <ExploreHeader onCategoryChanged={onDataChanged} />,
           }}
         />
-        {/* <ListingsMap listings={getoItems} /> */}
         {
           loading ?
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={'large'} color={Colors.primary} /></View>

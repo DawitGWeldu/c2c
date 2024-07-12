@@ -52,7 +52,7 @@ export const defaultStyles = StyleSheet.create({
   separator: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: Colors.lightGray,
-    marginLeft: 50,
+    // marginLeft: 50,
   },
   header: {
     fontSize: 30,

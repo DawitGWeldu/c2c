@@ -19,7 +19,7 @@ const FormField = ({
     <View style={[{gap: 16}, otherStyles]}>
       <Text style={{color: Colors.dark, fontFamily: 'mon-sb'}}>{title}</Text>
 
-      <View style={{height: 50, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.lightGray, flex: 1, flexDirection: 'row', alignItems: 'center'}}>
+      <View style={{height: 50, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: Colors.lightGray, flex: 1, flexDirection: 'row', alignItems: 'center'}}>
         <TextInput
           style={{flex: 1, color: '#000', fontFamily: 'mon-sb'}}
           value={value}
