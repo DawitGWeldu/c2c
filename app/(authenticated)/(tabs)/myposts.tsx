@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ListRenderItem, TouchableOpacity, Image, Dimens
 import * as Haptics from 'expo-haptics';
 import { defaultStyles } from '@/constants/Styles';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { Link, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { BottomSheetFlatList, BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
@@ -15,15 +15,10 @@ import { Buffer } from 'buffer';
 import { useNavigation, usePathname } from 'expo-router';
 
 
-interface Props {
-  onCategoryChanged: (category: string) => void;
-}
 const categories = [
+
   {
-    name: 'All',
-  },
-  {
-    name: 'Listings',
+    name: 'Posts',
   },
   {
     name: 'Flights',
@@ -33,14 +28,17 @@ const categories = [
   }
 ];
 
-const Page = ({ onCategoryChanged }: Props) => {
+const Page = () => {
   const router = useRouter()
+  const { tab } = useLocalSearchParams<{ tab: string }>()
 
   // const listRef = useRef<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [user, setUser] = useState(null as any);
   const { authState } = useAuth();
   const [listingss, setListingss] = useState([] as any)
+  const [flightss, setFlightss] = useState([] as any)
+  const [taskss, settaskss] = useState([] as any)
   const [refreshing, setRefreshing] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
@@ -49,44 +47,52 @@ const Page = ({ onCategoryChanged }: Props) => {
 
 
 
-  useMemo(() => {
-    setLoading(true)
-    const getUser = async () => {
-      try {
-        await axios.get(`${API_URL}/user/profile`).then((res) => {
-          setUser(res.data.data)
-          console.log("USERERERHGTGH: ", res.data.data)
-        })
 
-      } catch (e) {
-        console.log("ERROR, getUser", e)
-      } finally {
-        setLoading(false)
-      }
+
+
+
+
+
+
+
+  // Use for "updating" the views data after category changed
+  useEffect(() => {
+    setLoading(true);
+    handleRefresh()
+    setLoading(false);
+  }, [activeIndex]);
+
+
+
+  useMemo(() => {
+    const token = authState?.token
+    if (token) {
+      const decodedToken = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
+      setUser(decodedToken)
     }
-    getUser()
   }, [])
 
   useEffect(() => {
-    setLoading(true)
-
-    const load = async () => {
-      if (user) {
-        await handleRefresh()
+    const x = async () => {
+      if (tab) {
+        const tabIndex = parseInt(tab)
+        selectCategory(tabIndex)
       }
     }
-    load()
-    setLoading(false)
-  }, [user])
+    x()
+
+  }, [])
+
 
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    // console.log("USER: ", user._id)
-    await axios.get(`${API_URL}/listing/getalluserlistings/?user=${user._id}`)
-      .then((res) => {
-        const filteredListings = res.data.data
-        if (filteredListings.length === 0) {
+    try {
+      if (activeIndex == 0) {
+
+        const { data } = await axios.get(`${API_URL}/listing/getalluserlistings/?user=${user.id}`)
+
+        if (!data) {
           Toast.show({
             type: 'info',
             text1: 'No posts',
@@ -94,20 +100,39 @@ const Page = ({ onCategoryChanged }: Props) => {
           });
           setListingss(null);
         } else {
-          setListingss(filteredListings)
+          setListingss(data.data)
         }
-      })
-      .catch((e) => {
-        console.log("ERROR: ", e)
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Couldn\'t fetch posts'
-        })
-      })
-      .finally(() => {
-        setRefreshing(false)
-      })
+
+      } else {
+
+        const { data } = await axios.get(`${API_URL}/flight/getalluserflights/?user=${user.id}`)
+        console.log("DATA: ", data)
+
+        if (!data) {
+          Toast.show({
+            type: 'info',
+            text1: 'No flights',
+            text2: 'You don\'t have any flight posts yet'
+          });
+          setFlightss(null);
+        } else {
+          setFlightss(data.data)
+        }
+
+
+
+      }
+      setRefreshing(false)
+
+    } catch (error) {
+      console.log("MY POSTS: ", error)
+      setRefreshing(false)
+
+    }
+
+
+
+
   }
 
 
@@ -119,19 +144,21 @@ const Page = ({ onCategoryChanged }: Props) => {
 
 
   const selectCategory = (index: number) => {
+    console.log("Hello")
     const selected = itemsRef.current[index];
     setActiveIndex(index);
     selected?.measure((x) => {
       scrollRef.current?.scrollTo({ x: x - 16, y: 0, animated: true });
     });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onCategoryChanged(categories[index].name);
+    // onCategoryChanged(categories[index].name);
   };
 
 
 
   return (
     <SafeAreaView>
+
       <ScrollView
         style={{ width: '100%', height: '100%' }}
         refreshControl={
@@ -139,40 +166,84 @@ const Page = ({ onCategoryChanged }: Props) => {
         }
       >
 
-        {listingss && !loading ?
-          <View style={{}}>
-            {user &&
-              <View style={{ flex: 1, padding: 10, paddingTop: 24, flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+        {/* <View style={{ backgroundColor: 'linear-gradient(90deg, rgba(243,247,247,1) 0%, rgba(222,228,247,1) 100%)', borderBottomLeftRadius: 25, borderBottomRightRadius: 25 }}> */}
+        <View style={{ backgroundColor: "#fff", borderBottomLeftRadius: 25, borderBottomRightRadius: 25 }}>
+          {user &&
+            <View style={{ flex: 1, padding: 10, paddingTop: 24, flexDirection: 'column', gap: 4, alignItems: 'center' }}>
 
-                {/* <Image source={{ uri: `${API_URL}/userphotos/${user.id_photo}` }} style={{
-              width: 40,
-              height: 40,
-              borderRadius: 25,
-              backgroundColor: Colors.gray,
-            }} /> */}
-                <Text style={{ fontFamily: 'mon-sb', fontSize: 24, marginBottom: 24 }}>Welcome, {user.name}</Text>
+              {/* <Image source={{ uri: `${API_URL}/userphotos/${user.id_photo}` }} style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 25,
+                        backgroundColor: Colors.gray,
+                      }} /> */}
+              <Text style={{ fontFamily: 'mon-sb', fontSize: 24, marginBottom: 24 }}>Welcome, {user.name}</Text>
+              <Text style={{ fontFamily: 'mon', paddingHorizontal: "15%", fontSize: 18, marginBottom: 24 }}>Here, you can find and manage all your posts.</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 15 }}>
+                <View style={{ alignItems: 'center', justifyContent: 'space-evenly', borderRadius: 10, width: '20%', height: 60, backgroundColor: Colors.lightGray }}>
+                  {flightss.length >= 0 ? <Text style={{ fontFamily: 'mon-sb', fontSize: 18 }}>{listingss.length}</Text> : <Text style={{ fontFamily: 'mon-sb', fontSize: 18 }}>0</Text>}
+                  <Text style={{ fontFamily: 'mon', fontSize: 16 }}>Posts</Text>
+                </View>
+                <View style={{ alignItems: 'center', justifyContent: 'space-evenly', borderRadius: 10, width: '20%', height: 60, backgroundColor: Colors.lightGray }}>
+                  {flightss.length >= 0 ? <Text style={{ fontFamily: 'mon-sb', fontSize: 18 }}>{flightss.length}</Text> : <Text style={{ fontFamily: 'mon-sb', fontSize: 18 }}>0</Text>}
+                  <Text style={{ fontFamily: 'mon', fontSize: 16 }}>Flights</Text>
+                </View>
+                <View style={{ alignItems: 'center', justifyContent: 'space-evenly', borderRadius: 10, width: '20%', height: 60, backgroundColor: Colors.lightGray }}>
+                  {listingss.length > 0 && <Text style={{ fontFamily: 'mon-sb', fontSize: 18 }}>0</Text>}
+                  <Text style={{ fontFamily: 'mon', fontSize: 16 }}>Tasks</Text>
+                </View>
+              </View>
 
-                {/* <Text style={{ fontFamily: 'mon' }}>Here, you will find all your posts</Text> */}
-                {/* <Ionicons name='checkmark-circle' color={Colors.primary} /> */}
-              </View>}
+
+
+              {/* <Text style={{ fontFamily: 'mon' }}>Here, you will find all your posts</Text> */}
+              {/* <Ionicons name='checkmark-circle' color={Colors.primary} /> */}
+            </View>}
+          <ScrollView
+            horizontal
+            ref={scrollRef}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: 1,
+              alignItems: 'center',
+              gap: 0,
+              paddingHorizontal: 16,
+            }}
+          >
+            {categories.map((item, index) => (
+              <TouchableOpacity
+                ref={(el) => (itemsRef.current[index] = el)}
+                key={index}
+                style={activeIndex === index ? styles.categoriesBtnActive : styles.categoriesBtn}
+                onPress={() => selectCategory(index)}>
+                {/* <MaterialIcons
+                    name={item.icon as any}
+                    size={24}
+                    color={activeIndex === index ? '#000' : Colors.gray}
+                  /> */}
+                <Text style={activeIndex === index ? styles.categoryTextActive : styles.categoryText}>
+                  {item.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {listingss && activeIndex == 0 && !loading &&
+          <View >
+
 
             {listingss.length === 0 ?
-              <View style={{ flexDirection: 'column', marginTop: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
-                <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}> You don't have any posts yet.</Text>
-                <TouchableOpacity onPress={handleRefresh} style={{ backgroundColor: Colors.lightGray, padding: 8, borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons size={32} name='reload-outline' />
-                </TouchableOpacity>
-              </View>
+              <View style={{ flexDirection: 'column', marginTop: 30, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 16 }}>
+              <Text style={{ fontFamily: 'mon', fontSize: 16 }}> You haven't posted anything yet</Text>
+              <TouchableOpacity onPress={handleRefresh} style={{flex: 1, flexDirection: 'row', gap: 8, backgroundColor: Colors.primary, padding: 8, paddingHorizontal: 16, borderRadius: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons size={24} color={"#fff"} name='add' />
+                <Text style={{color: "#fff", fontFamily: 'mon'}}>Create post</Text>
+              </TouchableOpacity>
+            </View>
               :
 
               <>
-                <View style={styles.searchBtn}>
-                  <Ionicons name="search" size={24} />
-                  <TextInput style={{ flex: 1 }} placeholder='Search'>
-                    {/* <Text style={{ fontFamily: 'mon-sb' }}></Text> */}
-                    {/* <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text> */}
-                  </TextInput>
-                </View>
                 <View style={{ flexDirection: 'row', marginTop: 10, alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 32 }}>
                   <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}> My posts</Text>
                   <TouchableOpacity>
@@ -198,12 +269,12 @@ const Page = ({ onCategoryChanged }: Props) => {
                 <Animated.View style={[styles.listing, { flexDirection: 'row' }]} entering={FadeInRight} exiting={FadeOutLeft}>
                   <Animated.Image source={{ uri: item.image }} style={{ width: '40%', height: 120, borderBottomLeftRadius: 10, borderTopLeftRadius: 10, backgroundColor: '#fff' }} />
 
-                  <View style={{ flex: 1, padding: 12, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', paddingHorizontal: 6, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
+                  <View style={{ flex: 1, padding: 12, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', paddingHorizontal: 6, borderBottomRightRadius: 10 }}>
                     <Text numberOfLines={1} style={{ width: 200, fontSize: 16, fontFamily: 'mon-sb' }}>{item.title}</Text>
                     <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
                       <Text numberOfLines={2} style={{ fontFamily: 'mon', color: "#777" }}>{item.description} </Text>
                     </View>
-                    <View style={[defaultStyles.separator, {margin: 4}]}></View>
+                    <View style={[defaultStyles.separator, { margin: 4 }]}></View>
                     <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                       <Text style={{ fontFamily: 'mon' }}>Payment</Text>
 
@@ -221,12 +292,169 @@ const Page = ({ onCategoryChanged }: Props) => {
               </TouchableOpacity>
             ))}
           </View>
-          :
-          <View style={{ height: '100%', width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-            <ActivityIndicator color={Colors.primary} size={'large'} />
-            <Text>Getting your posts</Text>
+        }
+
+
+
+
+
+
+
+        {/* Flights */}
+        {flightss && activeIndex == 1 && !loading &&
+          <View >
+
+            {flightss.length === 0 ?
+
+              <View style={{ flexDirection: 'column', marginTop: 30, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 16 }}>
+                <Text style={{ fontFamily: 'mon', fontSize: 16 }}> You haven't posted any flights yet</Text>
+                <TouchableOpacity onPress={handleRefresh} style={{flex: 1, flexDirection: 'row', gap: 8, backgroundColor: Colors.primary, padding: 8, paddingHorizontal: 16, borderRadius: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons size={24} color={"#fff"} name='add' />
+                  <Text style={{color: "#fff", fontFamily: 'mon'}}>Create flight post</Text>
+                </TouchableOpacity>
+              </View>
+
+              :
+
+              <>
+                <View style={{ flexDirection: 'row', marginTop: 10, alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 32 }}>
+                  <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}> My flights</Text>
+                  <TouchableOpacity>
+                    <Ionicons name='filter' style={{ fontWeight: 'bold', fontSize: 20 }} />
+                  </TouchableOpacity>
+                </View>
+              </>
+
+
+
+            }
+
+            {flightss.map((item: any, index: any) => (
+              <TouchableOpacity
+                key={index}
+                activeOpacity={1}
+                onPress={() => {
+                  router.push({
+                    pathname: `/flight/[slug]`,
+                    params: { slug: item.slug },
+                  });
+                }}>
+                <Animated.View style={[styles.listing, { flexDirection: 'row' }]} entering={FadeInRight} exiting={FadeOutLeft}>
+                  <Animated.Image source={{ uri: "https://media.istockphoto.com/id/1414160809/vector/airplane-icon-plane-flight-pictogram-transport-symbol-travel.jpg?s=612x612&w=0&k=20&c=BtgJVW1RQ9a4i8sTMm-Uk-HAFI2sNbDFQVvHbPKbQA4=" }} style={{ width: '40%', height: 120, borderBottomLeftRadius: 10, borderTopLeftRadius: 10, backgroundColor: '#fff' }} />
+
+                  <View style={{ flex: 1, padding: 12, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', paddingHorizontal: 6, borderBottomRightRadius: 10 }}>
+                  <View style={{  }}>
+                    <Text numberOfLines={1} style={{ paddingHorizontal: 8, fontSize: 16, fontFamily: 'mon-sb' }}><MaterialIcons name='flight-takeoff'/> {item.origin}</Text>
+                    <Text numberOfLines={1} style={{ paddingHorizontal: 8, fontFamily: 'mon-sb' }}><MaterialIcons name='flight-land'/> {item.destination} </Text>
+                    {/* <Text numberOfLines={1} style={{ paddingHorizontal: 8, fontFamily: 'mon' }}><MaterialIcons name='date-range'/> {new Date(item.departureDate).toLocaleDateString('en-us', { month:"short", day:"numeric", year: 'numeric'})} </Text> */}
+                  </View>
+                    <View style={[defaultStyles.separator, { margin: 4 }]}></View>
+                    <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                      <Text style={{ fontFamily: 'mon' }}>Payment</Text>
+
+                      <View style={{ backgroundColor: '#FFE000', borderRadius: 25, padding: 2, width: 100, alignItems: 'center', flexDirection: 'row' }}>
+                        <View style={{ gap: 4, alignItems: 'center' }}>
+                          {item.paymentStatus == 'verified' ? (<><Text>verified</Text><Ionicons name='checkmark-circle' color={Colors.primary} /></>) : (<View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><Ionicons name='hourglass' size={16} /><Text style={{ fontFamily: "mon" }}>pending</Text></View>)}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                  {/* <TouchableOpacity style={{ position: 'absolute', backgroundColor: '#222', borderRadius: 25, padding: 4, alignItems: 'center', right: 0, top: 30 }}>
+                    <Ionicons name="heart-outline" size={24} color="#000" />
+                  </TouchableOpacity> */}
+                </Animated.View>
+              </TouchableOpacity>
+            ))}
           </View>
         }
+
+
+
+
+
+
+        {/* Tasks */}
+        {taskss && activeIndex == 2 && !loading &&
+          <View >
+
+            {taskss.length === 0 ?
+
+              <View style={{ flexDirection: 'column', marginTop: 30, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 16 }}>
+                <Text style={{ fontFamily: 'mon', fontSize: 16 }}> You haven't posted any tasks</Text>
+                <TouchableOpacity onPress={handleRefresh} style={{flex: 1, flexDirection: 'row', gap: 8, backgroundColor: Colors.primary, padding: 8, paddingHorizontal: 16, borderRadius: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons size={24} color={"#fff"} name='add' />
+                  <Text style={{color: "#fff", fontFamily: 'mon'}}>Create task post</Text>
+                </TouchableOpacity>
+              </View>
+
+              :
+
+              <>
+                <View style={{ flexDirection: 'row', marginTop: 10, alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 32 }}>
+                  <Text style={{ fontFamily: 'mon-sb', fontSize: 16 }}> My Tasks</Text>
+                  <TouchableOpacity>
+                    <Ionicons name='filter' style={{ fontWeight: 'bold', fontSize: 20 }} />
+                  </TouchableOpacity>
+                </View>
+              </>
+
+
+
+            }
+
+            {taskss.map((item: any, index: any) => (
+              <TouchableOpacity
+                key={index}
+                activeOpacity={1}
+                onPress={() => {
+                  router.push({
+                    pathname: `/listing/[slug]`,
+                    params: { slug: item.slug },
+                  });
+                }}>
+                <Animated.View style={[styles.listing, { flexDirection: 'row' }]} entering={FadeInRight} exiting={FadeOutLeft}>
+                  <Animated.Image source={{ uri: item.image }} style={{ width: '40%', height: 120, borderBottomLeftRadius: 10, borderTopLeftRadius: 10, backgroundColor: '#fff' }} />
+
+                  <View style={{ flex: 1, padding: 12, flexDirection: 'column', backgroundColor: '#fff', justifyContent: 'space-between', paddingHorizontal: 6, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
+                    <Text numberOfLines={1} style={{ width: 200, fontSize: 16, fontFamily: 'mon-sb' }}>{item.title}</Text>
+                    <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                      <Text numberOfLines={2} style={{ fontFamily: 'mon', color: "#777" }}>{item.description} </Text>
+                    </View>
+                    <View style={[defaultStyles.separator, { margin: 4 }]}></View>
+                    <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                      <Text style={{ fontFamily: 'mon' }}>Payment</Text>
+
+                      <View style={{ backgroundColor: '#FFE000', borderRadius: 25, padding: 2, width: 100, alignItems: 'center', flexDirection: 'row' }}>
+                        <View style={{ gap: 4, alignItems: 'center' }}>
+                          {item.paymentVerified ? (<><Text>verified</Text><Ionicons name='checkmark-circle' color={Colors.primary} /></>) : (<View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><Ionicons name='hourglass' size={16} /><Text style={{ fontFamily: "mon" }}>pending</Text></View>)}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                  {/* <TouchableOpacity style={{ position: 'absolute', backgroundColor: '#222', borderRadius: 25, padding: 4, alignItems: 'center', right: 0, top: 30 }}>
+                    <Ionicons name="heart-outline" size={24} color="#000" />
+                  </TouchableOpacity> */}
+                </Animated.View>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          
+        }
+
+        {loading && 
+          <View style={{ height: '100%', width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+            <ActivityIndicator color={Colors.primary} size={'large'} />
+            <Text>Gettinggg your posts</Text>
+          </View>
+        }
+
+
+
+
+
+
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -282,7 +510,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     // marginBottom: 8,
-  }, categoryText: {
+  },
+  categoryText: {
     fontSize: 14,
     fontFamily: 'mon-sb',
     color: Colors.gray,
@@ -290,20 +519,22 @@ const styles = StyleSheet.create({
   categoryTextActive: {
     fontSize: 14,
     fontFamily: 'mon-sb',
-    color: '#fff',
+    color: '#000',
   },
   categoriesBtn: {
     flex: 1,
-    backgroundColor: Colors.lightGray,
-    borderRadius: 15,
+    // backgroundColor: Colors.lightGray,
+    // borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 5,
   },
   categoriesBtnActive: {
-    backgroundColor: Colors.primary,
+    // backgroundColor: Colors.primary,
+    borderBottomColor: Colors.primary,
+    borderBottomWidth: 4,
     padding: 5,
-    borderRadius: 15,
+    // borderRadius: 15,
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',

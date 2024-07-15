@@ -37,7 +37,7 @@ const paymentMethodss = [
 
 const Page = () => {
   const _maybeRenderUploadingOverlay = () => {
-    if (uploading) {
+    if (uploading || submitting) {
       return (
         <View
           style={[
@@ -125,28 +125,36 @@ const Page = () => {
   const handleSubmit = async () => {
 
     setSubmitting(true)
+
     try {
       await _uploadImagePicked(image)
-    } catch {
-      console.log("error")
-    }
-
-    //@ts-ignore
-    const payment = {
-      user: user,
-      listing: id,
-      image: image,
-      amount: "250",
-      status: "pending"
-    }
-    try {
+      //@ts-ignore
+      let tab
+      let payment = {
+        user: user,
+        listing: id,
+        image: image,
+        amount: "250",
+        status: "pending",
+        type: ""
+      }
+      if (type == "Flight") {
+        payment.type = "Flight"
+        tab = "1"
+      } else if(type == "Task") {
+        payment.type = "Task"
+        tab = "2"
+      } else {
+        payment.type = "Listing"
+        tab = "0"
+      }
       const { data } = await axios.post(`${API_URL}/payment/addpayment`, payment)
 
       // console.log("Payment Saved",JSON.stringify(data))
 
       if (data.success) {
 
-        router.replace('/(authenticated)/(tabs)/myposts')
+        router.replace({ pathname: '/(authenticated)/(tabs)/myposts', params: { tab: tab } })
         Toast.show({
           type: 'success',
           text1: "Success",
@@ -180,7 +188,7 @@ const Page = () => {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
-  const { id, user } = useLocalSearchParams<{ id: string, user: string }>()
+  const { id, user, type } = useLocalSearchParams<{ id: string, user: string, type: string }>()
 
   return (
     <View style={styles.container} >

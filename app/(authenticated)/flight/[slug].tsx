@@ -26,7 +26,7 @@ const IMG_HEIGHT = 300;
 const DetailsPage = () => {
   const { slug } = useLocalSearchParams<{ slug: string, item: string }>();
 
-  const [listing, setListing] = useState<any>(undefined)
+  const [flight, setFlight] = useState<any>(undefined)
   const [user, setUser] = useState<any>(undefined)
   const [joinedDate, setJoinedDate] = useState<any>(undefined)
   const [loading, setLoading] = useState(true)
@@ -59,7 +59,7 @@ const DetailsPage = () => {
   //   }
   // }
   useEffect(() => {
-    const loadListing = async () => {
+    const loadFlight = async () => {
       try {
         setLoading(true)
         const token = authState!.token
@@ -68,12 +68,12 @@ const DetailsPage = () => {
 
         // console.log("hererere: " + JSON.stringify(activeUser))
 
-        const { data } = await axios.post(`${API_URL}/listing/${slug}`, {
+        const { data } = await axios.post(`${API_URL}/flight/${slug}`, {
           activeUser: activeUser
         })
         console.log("jhgjhgjhgjhg: " + JSON.stringify(data.data))
 
-        setListing(data.data)
+        setFlight(data.data)
         const joinedDatee = new Date(data.data.user.createdAt)
         setJoinedDate(joinedDatee.toLocaleDateString())
 
@@ -83,7 +83,7 @@ const DetailsPage = () => {
         Toast.show({
           type: 'error',
           text1: 'Error',
-          text2: error.respponse.msg || 'Couldn\'t fetch listing'
+          text2: error.respponse.msg || 'Couldn\'t fetch flight'
         })
         setLoading(false)
 
@@ -91,7 +91,7 @@ const DetailsPage = () => {
 
     }
 
-    loadListing()
+    loadFlight()
   }, [])
 
   // useEffect(() => {
@@ -106,8 +106,8 @@ const DetailsPage = () => {
   const shareListing = async () => {
     try {
       await Share.share({
-        title: listing.name,
-        url: listing.listing_url,
+        title: flight.slug,
+        url: flight.slug,
       });
     } catch (err) {
       console.log();
@@ -124,7 +124,7 @@ const DetailsPage = () => {
       ),
       headerRight: () => (
         <View style={styles.bar}>
-          <TouchableOpacity style={styles.roundButton} onPress={shareListing}>
+          <TouchableOpacity style={styles.roundButton}>
             <Ionicons name="share-outline" size={22} color={'#000'} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.roundButton}>
@@ -140,13 +140,12 @@ const DetailsPage = () => {
     });
   }, []);
 
-  if (listing) {
-  }
+
 
 
   return (
 
-    (!listing ?
+    (!flight ?
       <LinearGradient colors={["#f3f7f7", "#dee4f7"]}
         style={{ flex: 1, paddingTop: 50 }}><View style={{ alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={'large'} color={Colors.primary}></ActivityIndicator></View></LinearGradient>
       :
@@ -158,14 +157,14 @@ const DetailsPage = () => {
             // ref={scrollRef}
             scrollEventThrottle={16}>
             <Image
-              source={{ uri: listing.image }}
+              source={{ uri: "https://media.istockphoto.com/id/1414160809/vector/airplane-icon-plane-flight-pictogram-transport-symbol-travel.jpg?s=612x612&w=0&k=20&c=BtgJVW1RQ9a4i8sTMm-Uk-HAFI2sNbDFQVvHbPKbQA4=" }}
               style={[styles.image]}
               resizeMode="cover"
             />
-            {user == listing.user._id &&
-              <View style={[listing.paymentVerified ? { backgroundColor: Colors.green } : { backgroundColor: "#e3c334" }, { paddingHorizontal: 10, paddingVertical: 4, flexDirection: 'row', justifyContent: 'space-between' }]}>
+            {user == flight.user._id &&
+              <View style={[flight.paymentStatus == "verified" ? { backgroundColor: Colors.green } : { backgroundColor: "#e3c334" }, { paddingHorizontal: 10, paddingVertical: 4, flexDirection: 'row', justifyContent: 'space-between' }]}>
                 <Text style={{ marginTop: 12, fontFamily: 'mon-sb', }}>Payment status</Text>
-                <Text style={{ marginTop: 12, fontFamily: 'mon-sb', }}>{!listing.paymentVerified ? "pending" : "verified"}</Text>
+                <Text style={{ marginTop: 12, fontFamily: 'mon-sb', }}>pending</Text>
               </View>
             }
 
@@ -176,16 +175,16 @@ const DetailsPage = () => {
             <View style={styles.infoContainer}>
 
 
-              <Text style={styles.name}>{listing.title}</Text>
+              {/* <Text style={styles.name}>{flight.title}</Text>
               <Text style={{ marginTop: 12, fontFamily: 'mon-sb', fontSize: 18 }}>Description</Text>
-              <Text style={styles.description}>{listing.description}</Text>
+              <Text style={styles.description}>{listing.description}</Text> */}
               {/* <View style={styles.divider} /> */}
 
-              {!user == listing.user._id && <View style={styles.hostView}>
-                <Image source={{ uri: `${API_URL}/userphotos/${listing.user.id_photo}` }} style={styles.host} />
+              {!user == flight.user._id && <View style={styles.hostView}>
+                <Image source={{ uri: `${API_URL}/userphotos/${flight.user.id_photo}` }} style={styles.host} />
 
                 <View>
-                  <Text style={{ fontFamily: 'mon-sb', fontSize: 16, color: Colors.muted }}>{listing.user.name}</Text>
+                  <Text style={{ fontFamily: 'mon-sb', fontSize: 16, color: Colors.muted }}>{flight.user.name}</Text>
 
                   <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
                     <Ionicons name="star" size={16} />
@@ -198,36 +197,38 @@ const DetailsPage = () => {
 
                   </View>
                 </View>
-              </View>}
+              </View>
+
+              }
 
 
 
-              <Text style={{ marginVertical: 8, fontFamily: 'mon-sb', fontSize: 18 }}>Item details</Text>
+              <Text style={{ marginVertical: 8, fontFamily: 'mon-sb', fontSize: 18 }}>Flight details</Text>
               <View style={styles.divider} />
 
               <Text style={{ fontFamily: 'mon', fontSize: 17 }}>
 
                 <MaterialIcons name='flight-takeoff' size={20} color={Colors.green} />
                 {" "}
-                From {listing.origin.name}
+                From {flight.origin}
               </Text>
               <Text style={{ fontFamily: 'mon', fontSize: 17 }}>
                 <MaterialIcons name='flight-land' size={20} color={Colors.primary} />
                 {" "}
-                To {listing.destination.name}
+                To {flight.destination}
               </Text>
               <Text style={{ fontFamily: 'mon', fontSize: 17, marginTop: 10 }}>
                 <MaterialIcons name='scale' color={Colors.dark} />
                 {" "}
-                Weight:  {listing.weight}kg
+                Max Weight allowed:  {flight.maxWeight} kg
               </Text>
 
-              <Text style={{ fontFamily: 'mon', fontSize: 17, marginTop: 10 }}>
+              {/* <Text style={{ fontFamily: 'mon', fontSize: 17, marginTop: 10 }}>
                 <MaterialIcons name='scale' color={Colors.dark} />
                 {" "}
                 Price:  ETB{listing.price}
-              </Text>
-              {listing.items.length > 0 && (
+              </Text> */}
+              {/* {listing.items.length > 0 && (
                 <View style={{ marginVertical: 10, padding: 10, borderRadius: 10, backgroundColor: Colors.extraLightGray }}>
 
                   <Text style={{ fontFamily: 'mon-sb', fontSize: 17, marginTop: 10 }}>
@@ -242,7 +243,7 @@ const DetailsPage = () => {
                     </Text>
                   ))}
                 </View>
-              )}
+              )} */}
               {/* <Text style={styles.rooms}>
               Fragile · Non-Perishable
             </Text> */}
@@ -255,7 +256,7 @@ const DetailsPage = () => {
 
               {/* <Text style={{ fontFamily: 'mon-sb', fontSize: 15, paddingVertical: 6 }}>Description</Text>
           <Text numberOfLines={5} style={styles.description}>{listing.description}</Text> */}
-
+              {/* 
               <View style={styles.divider} />
               <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 4 }}>
                 <MaterialIcons name='location-searching' size={18} />
@@ -276,7 +277,7 @@ const DetailsPage = () => {
                     }}
                   />
                 </MapView>
-              </View>
+              </View>*/}
             </View>
           </ScrollView>
 
@@ -288,11 +289,11 @@ const DetailsPage = () => {
                 <Text style={{ fontFamily: 'mon', fontSize: 10 }}>Remaining Bagage Allowance </Text>
               </View> */}
 
-              {user == listing.user._id ?
+              {user == flight.user._id ?
                 <TouchableOpacity style={[defaultStyles.btn, { paddingHorizontal: 20, flexDirection: 'row', alignItems: "center", justifyContent: 'space-between', gap: 4, backgroundColor: Colors.primary }]}>
                   <Ionicons name='pencil' size={14} color={'#fff'} />
 
-                   <Text style={defaultStyles.btnText}>Edit </Text>
+                  <Text style={defaultStyles.btnText}>Edit Flight </Text>
                 </TouchableOpacity> :
                 <TouchableOpacity style={[defaultStyles.btn, { paddingHorizontal: 20, flexDirection: 'row', alignItems: "center", justifyContent: 'space-between', gap: 4 }]}>
 
@@ -304,7 +305,6 @@ const DetailsPage = () => {
         </View>
       </LinearGradient>
     )
-    // <View><TouchableOpacity style={defaultStyles.btn} onPress={handleRefresh}><Text>Reload</Text></TouchableOpacity><ActivityIndicator size={'large'} color={Colors.primary}></ActivityIndicator></View>
 
   );
 };

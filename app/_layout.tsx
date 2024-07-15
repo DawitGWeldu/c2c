@@ -287,6 +287,7 @@ function RootLayoutNav() {
       />
       <Stack.Screen name="(authenticated)/(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(authenticated)/listing/[slug]" options={{ headerTitle: '' }} />
+      <Stack.Screen name="(authenticated)/flight/[slug]" options={{ headerTitle: '' }} />
       <Stack.Screen
         name="(authenticated)/(modals)/booking"
         options={{

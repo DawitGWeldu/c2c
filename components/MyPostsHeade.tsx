@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -8,8 +8,13 @@ import { Link, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useAuth } from '@/app/context/AuthContext';
+import { Buffer } from 'buffer';
+
 
 const categories = [
+  {
+    name: 'All',
+  },
   {
     name: 'Posts',
   },
@@ -25,11 +30,12 @@ interface Props {
   onCategoryChanged: (category: string) => void;
 }
 
-const ExploreHeader = ({ onCategoryChanged }: Props) => {
+const MyPostsHeader = ({ onCategoryChanged }: Props) => {
   const scrollRef = useRef<ScrollView>(null);
   const itemsRef = useRef<Array<TouchableOpacity | null>>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const { onLogout } = useAuth() as any
+  const [activeUser, setActiveUser] = useState(null as any);
+  const { onLogout, authState } = useAuth() as any
   const selectCategory = (index: number) => {
     const selected = itemsRef.current[index];
     setActiveIndex(index);
@@ -40,6 +46,18 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
     onCategoryChanged(categories[index].name);
   };
 
+  useEffect(() => {
+    const loadUser = () => {
+      if (authState.token) {
+        const decodedToken = JSON.parse(Buffer.from(authState.token.split('.')[1], 'base64').toString())
+        console.log("decodedToken: ", decodedToken)
+        setActiveUser(decodedToken)
+      }
+    }
+    loadUser()
+  }, [])
+
+
   const handleLogout = () => {
     onLogout()
   }
@@ -49,19 +67,7 @@ const ExploreHeader = ({ onCategoryChanged }: Props) => {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.container}>
         <View style={styles.actionRow}>
-          <TouchableOpacity onPress={(() => {
-            router.push({
-              pathname: '/(modals)/pickLocation'
-            });
-          })}>
-            <View style={styles.searchBtn}>
-              <Ionicons name="search" size={24} />
-              <View>
-                <Text style={{ fontFamily: 'mon-sb' }}>Search</Text>
-                {/* <Text style={{ color: Colors.gray, fontFamily: 'mon' }}>Anywhere · Any time</Text> */}
-              </View>
-            </View>
-          </TouchableOpacity>
+          <Text style={{ fontFamily: 'mon-sb', fontSize: 24, marginBottom: 24 }}>Welcome, {activeUser.name}</Text>
           <Pressable onPress={handleLogout} style={styles.filterBtn}>
             <Ionicons name="person" size={24} />
           </Pressable>
@@ -161,4 +167,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ExploreHeader;
+export default MyPostsHeader;

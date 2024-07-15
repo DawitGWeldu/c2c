@@ -9,13 +9,14 @@ const Layout = () => {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.gray,
         tabBarShowLabel: true,
         tabBarLabelStyle: {
           fontFamily: 'mon-sb',
         },
         tabBarStyle: {
           backgroundColor: 'linear-gradient(90deg, rgba(243,247,247,1) 0%, rgba(222,228,247,1) 100%)',
-          height: 60,
+          height: 55,
           paddingVertical: 4
         }
       }}
@@ -24,7 +25,7 @@ const Layout = () => {
         name="index"
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ size, color }) => <Ionicons name="home-outline" size={30} color={color} />,
+          tabBarIcon: ({ size, color }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -33,7 +34,7 @@ const Layout = () => {
           headerShown: false,
           tabBarLabel: 'My posts',
           tabBarIcon: ({ size, color }) => (
-            <MaterialIcons name="luggage" size={30} color={color} />
+            <Ionicons name="bookmark-outline" size={size} color={color} />
           ),
         }}
       />
@@ -43,7 +44,7 @@ const Layout = () => {
           headerShown: false,
           tabBarLabel: 'Create',
           tabBarIconStyle: {borderRadius: 50, width: 42, fontWeight: 'bold'},
-          tabBarIcon: ({ size, color }) => <Ionicons name="add-circle" size={40} color={color} />,
+          tabBarIcon: ({ size, color }) => <Ionicons name="add-circle" size={35} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -52,7 +53,7 @@ const Layout = () => {
           headerShown: false,
           tabBarLabel: 'Inbox',
           tabBarIcon: ({ size, color }) => (
-            <MaterialCommunityIcons name="message-outline" size={size} color={color} />
+            <Ionicons name="chatbox-ellipses-outline" size={size} color={color} />
           ),
         }}
       />
@@ -62,7 +63,7 @@ const Layout = () => {
           tabBarLabel: 'profile',
           headerShown: false,
           tabBarIcon: ({ size, color }) => (
-            <MaterialIcons name="person" size={size} color={color} />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />

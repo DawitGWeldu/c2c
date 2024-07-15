@@ -13,7 +13,7 @@ interface AuthProps {
     onLogout?: () => Promise<any>
 }
 const TOKEN_KEY = 'Secret'
-export const API_URL = 'http://192.168.109.53:5000'
+export const API_URL = 'http://192.168.177.53:5000'
 
 export const AuthContext = createContext<AuthProps>({})
 

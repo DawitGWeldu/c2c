@@ -12,9 +12,11 @@ import { defaultStyles } from '@/constants/Styles';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import HomeBannerSlider from '@/components/HomeSlider';
+import FlightsBottomSheet from '@/components/FlightsBottomSheet';
 
 const Page = () => {
   const [items, setItems]: any = useState();
+  const [flights, setFlights]: any = useState();
   const [loading, setLoading] = useState(false)
   const { selectedLocation } = useLocalSearchParams();
 
@@ -52,18 +54,42 @@ const Page = () => {
         setLoading(false)
       }
     }
+    const getFlights = async () => {
+      setLoading(true)
+
+      try {
+        const { data } = await axios.get(`${API_URL}/flight/getAllFlights`)
+        // console.log(data.data[0].user)
+        setFlights(data.data)
+        setLoading(false)
+      } catch {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Couldn\'t fetch flights'
+        })
+        setLoading(false)
+      }
+    }
     getListings()
+    getFlights()
     return
   }, [])
 
   // const getoItems = useMemo(() => listingsDataGeo, []);
-  const [category, setCategory] = useState<string>('Home');
+  const [category, setCategory] = useState<string>('All');
 
-  const handleRefresh = async () => {
+  const handleRefresh = async (category?: any) => {
     try {
-      const { data } = await axios.get(`${API_URL}/listing/getAllListings`)
-      console.log(data)
-      setItems(data.data)
+      if(category=="Flights"){
+        const { data } = await axios.get(`${API_URL}/flight/getAllFlights`)
+        console.log("Flights: Index: ",data.data)
+        setFlights(data.data)
+      }else{
+        const { data } = await axios.get(`${API_URL}/listing/getAllListings`)
+        console.log("Listings: Index: ",data)
+        setItems(data.data)
+      }
     } catch {
       Toast.show({
         type: 'error',
@@ -72,6 +98,13 @@ const Page = () => {
       })
     }
   }
+
+  // Use for "updating" the views data after category changed
+  useEffect(() => {
+    setLoading(true);
+    handleRefresh(category)
+    setLoading(false);
+  }, [category]);
 
   const onDataChanged = (category: string) => {
     setCategory(category);
@@ -94,29 +127,74 @@ const Page = () => {
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={'large'} color={Colors.primary} /></View>
             :
             <>
-              {!items ?
-                <View style={{ flex: 1, height: 500, alignItems: 'center', flexDirection: 'column', justifyContent: 'center', gap: 30 }}>
-                  <Text style={{ fontFamily: 'mon-sb' }}>Error</Text>
-                  <Text style={{ fontFamily: "mon" }}>Couldn't fetch posts</Text>
-                  <TouchableOpacity onPress={handleRefresh} style={{ backgroundColor: Colors.lightGray, padding: 8, borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons size={32} name='reload-outline' />
-                  </TouchableOpacity>
-                </View>
-                :
+              {(category == "All" || category == "Posts") &&
+
                 <>
-                  {items.length > 0 ?
-                    <ListingsBottomSheet listings={items} category={category} />
-                    :
-                    <View style={{ flex: 1, height: 500, alignItems: 'center', flexDirection: 'column', justifyContent: 'center', gap: 10}}>
-                      <Text style={{ fontFamily: 'mon-sb' }}>Nothing to show</Text>
-                      {/* <Text style={{ fontFamily: "mon" }}></Text> */}
+
+                  {!items ?
+                    <View style={{ flex: 1, height: 500, alignItems: 'center', flexDirection: 'column', justifyContent: 'center', gap: 30 }}>
+                      <Text style={{ fontFamily: 'mon-sb' }}>Error</Text>
+                      <Text style={{ fontFamily: "mon" }}>Couldn't fetch posts</Text>
                       <TouchableOpacity onPress={handleRefresh} style={{ backgroundColor: Colors.lightGray, padding: 8, borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
-                        <Ionicons size={32} name='reload' />
+                        <Ionicons size={32} name='reload-outline' />
                       </TouchableOpacity>
-                    </View>}
+                    </View>
+                    :
+                    <>
+                      {items.length > 0 ?
+
+                          <ListingsBottomSheet listings={items} category={category} />
+
+                        :
+                        <View style={{ flex: 1, height: 500, alignItems: 'center', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
+                          <Text style={{ fontFamily: 'mon-sb' }}>Nothing to show</Text>
+                          {/* <Text style={{ fontFamily: "mon" }}></Text> */}
+                          <TouchableOpacity onPress={handleRefresh} style={{ backgroundColor: Colors.lightGray, padding: 8, borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
+                            <Ionicons size={32} name='reload' />
+                          </TouchableOpacity>
+                        </View>}
+                    </>
+
+                  }
+
                 </>
 
               }
+
+              {(category == "Flights") &&
+
+                <>
+
+                  {!flights ?
+                    <View style={{ flex: 1, height: 500, alignItems: 'center', flexDirection: 'column', justifyContent: 'center', gap: 30 }}>
+                      <Text style={{ fontFamily: 'mon-sb' }}>Error</Text>
+                      <Text style={{ fontFamily: "mon" }}>Couldn't fetch posts</Text>
+                      <TouchableOpacity onPress={handleRefresh} style={{ backgroundColor: Colors.lightGray, padding: 8, borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons size={32} name='reload-outline' />
+                      </TouchableOpacity>
+                    </View>
+                    :
+                    <>
+                      {items.length > 0 ?
+                    
+                          <FlightsBottomSheet flights={flights} category={category} />
+                    
+                        :
+                        <View style={{ flex: 1, height: 500, alignItems: 'center', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
+                          <Text style={{ fontFamily: 'mon-sb' }}>Nothing to show</Text>
+                          {/* <Text style={{ fontFamily: "mon" }}></Text> */}
+                          <TouchableOpacity onPress={handleRefresh} style={{ backgroundColor: Colors.lightGray, padding: 8, borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
+                            <Ionicons size={32} name='reload' />
+                          </TouchableOpacity>
+                        </View>}
+                    </>
+
+                  }
+
+                </>
+
+              }
+
             </>
         }
 

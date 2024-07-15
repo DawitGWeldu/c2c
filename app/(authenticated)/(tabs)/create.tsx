@@ -1,5 +1,5 @@
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
-
+import * as Haptics from 'expo-haptics';
 import * as ImagePicker from "expo-image-picker";
 import { Buffer } from 'buffer';
 import { getApps, initializeApp } from "firebase/app";
@@ -44,6 +44,18 @@ import MapView, { Marker } from 'react-native-maps';
 
 
 
+const categories = [
+
+  {
+    name: 'Post',
+  },
+  {
+    name: 'Flight',
+  },
+  {
+    name: 'Task',
+  }
+];
 
 export const withRouter = (Component: any) => {
   const Wrapper = (props: any) => {
@@ -73,12 +85,16 @@ class App extends React.Component {
   static contextType = AuthContext;
   bottomSheetModalRef
   mapRef
+  scrollRef
   placesRef
+  itemsRef
   constructor(props: any) {
     super(props);
     this.mapRef = React.createRef()
     this.placesRef = React.createRef()
+    this.scrollRef = React.createRef()
     this.bottomSheetModalRef = React.createRef();
+    this.itemsRef = React.createRef();
     this.state = {
       image: "",
       uploading: false,
@@ -94,6 +110,17 @@ class App extends React.Component {
         originCountry: null as (ICountry | null),
         originPhoneNumber: "",
 
+      },
+      flightForm: {
+        departureDate: '',
+        airline: '',
+        // layovers: [],
+        maxWeight: '',
+        arrivalDate: '',
+        origin: '',
+        destination: '',
+        flightContactCountry: null as (ICountry | null),
+        contact: ""
       },
       inputs: [{
         key: 0,
@@ -113,9 +140,22 @@ class App extends React.Component {
         input: null,
         msg: null
       }],
-      submitting: false
+      submitting: false,
+      activeIndex: 0
     };
   }
+
+
+
+  selectCategory = (index: number) => {
+    this.setState({ activeIndex: index })
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // onCategoryChanged(categories[index].name);
+  };
+
+
+
+
   handleSheetChanges = (index: any) => {
     this.setState({ selectedLocation: null })
     console.log(this.state)
@@ -139,6 +179,17 @@ class App extends React.Component {
       originPhoneNumber: "",
 
     },
+    flightForm: {
+      departureDate: '',
+      airline: '',
+      // layovers: [],
+      maxWeight: '',
+      arrivalDate: '',
+      origin: '',
+      destination: '',
+      flightContactCountry: null as (ICountry | null),
+      contact: ""
+    },
     inputs: [{
       key: 0,
       value: {
@@ -157,7 +208,8 @@ class App extends React.Component {
       input: null,
       msg: null
     }],
-    submitting: false
+    submitting: false,
+    activeIndex: 0
   };
 
 
@@ -182,6 +234,22 @@ class App extends React.Component {
               // @ts-ignore
               ...prevState.form,
               destination: this.state.selectedLocation       // update the value of specific key
+            }
+          }))
+        } else if (input == 'flightFrom') {
+          this.setState(prevState => ({
+            flightForm: {                   // object that we want to update
+              // @ts-ignore
+              ...prevState.form,
+              origin: this.state.selectedLocation.name      // update the value of specific key
+            }
+          }))
+        } else if (input == 'flightTo') {
+          this.setState(prevState => ({
+            flightForm: {                   // object that we want to update
+              // @ts-ignore
+              ...prevState.form,
+              destination: this.state.selectedLocation.name      // update the value of specific key
             }
           }))
         }
@@ -363,8 +431,8 @@ class App extends React.Component {
     const imageLocalUri = this.state.image
     try {
       const imageRemoteUri = await this._uploadImagePicked(imageLocalUri)
-    } catch(e) {
-      console.log("error: ",e)
+    } catch (e) {
+      console.log("error: ", e)
     }
     let items = [] as any
     this.inputs.forEach((input) => items.push({ name: input.value.name, quantity: input.value.quantity }));
@@ -513,350 +581,611 @@ class App extends React.Component {
     return (
       <LinearGradient colors={["#f3f7f7", "#dee4f7"]}
         style={{ flex: 1, paddingTop: 50 }}>
-
-        <ScrollView keyboardShouldPersistTaps={'handled'} style={{ padding: 16 }}>
-          <Text style={{ fontFamily: 'mon-sb', fontSize: 24, color: Colors.dark }}>Create a post</Text>
-
-          <FormField
-            title="Title"
-            value={form.title}
-            placeholder="Give your post a descriptive title..."
-            handleChangeText={(e: any) => {
-              this.setState(prevState => ({
-                form: {                   // object that we want to update
-                  // @ts-ignore
-                  ...prevState.form,    // keep all other key-value pairs
-                  title: e       // update the value of specific key
-                }
-              }))
-            }}
-            otherStyles={{ marginTop: 20 }}
-          />
-
-          <FormField
-            title="Description"
-            value={form.description}
-            placeholder="Add a clear description of the item/s"
-            handleChangeText={(e: any) => {
-              this.setState(prevState => ({
-                form: {                   // object that we want to update
-                  // @ts-ignore
-                  ...prevState.form,    // keep all other key-value pairs
-                  description: e       // update the value of specific key
-                }
-              }))
-            }}
-            otherStyles={{ marginTop: 20 }}
-          />
-
-          <Text style={{ color: Colors.dark, fontFamily: 'mon-sb', marginVertical: 16 }}>List of items</Text>
-
-          {this.inputs && this._renderInputs()}
-
-          <TouchableOpacity
-            style={[defaultStyles.btn, { backgroundColor: Colors.primaryMuted, flexDirection: 'row', gap: 6, alignItems: "center", marginTop: 8 }]}
-            // onPress={}
-            disabled={this.state.uploading}
-            onPress={this.addHandler}>
-            <Ionicons name="add" color={'#fff'} size={20} />
-            <Text style={{ fontFamily: 'mon-sb', color: '#fff' }}>
-              {this.state.inputs.length > 0 ? (
-                'Add more items'
-              ) : 'Add items'}
-
-            </Text>
-          </TouchableOpacity>
-
-          <View style={{ marginTop: 16, flexDirection: 'column', gap: 2 }}>
-            <Text style={{ color: Colors.dark, fontFamily: "mon-sb", marginBottom: 10 }}>
-              Upload a picture of the item
-            </Text>
-
-            {image && (
-              <TouchableOpacity style={{ width: '100%', alignItems: 'center', justifyContent: 'center', position: 'absolute', bottom: 0, zIndex: 1, height: 50, marginBottom: "auto", backgroundColor: 'rgba(0, 0, 0, 0.2)' }} onPress={() => this.setState({ image: "" })}>
-                <Ionicons name="close" size={32} color="#fff" />
-              </TouchableOpacity>
-            )}
-
-            <View style={{ height: 200, paddingHorizontal: 4, backgroundColor: Colors.lightGray, borderRadius: 10, borderColor: Colors.primary, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              {!!image ? (
-                <Image
-                  source={{ uri: image }}
-                  style={{ width: "100%", height: 200, borderRadius: 10 }}
-                  resizeMode='contain'
-                />
-              ) : (
-                <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                  <TouchableOpacity onPress={() => this._takePhoto()} style={{ borderStyle: 'dashed', borderWidth: 1, borderRadius: 8, borderColor: Colors.primary, width: 100, height: 100, justifyContent: 'center', alignItems: 'center' }}>
-                    <Ionicons
-                      name='camera-outline'
-                      size={50}
-                    // alt="upload"
-                    // style={{ width: "50%", alignItems: 'center', height: "50%"}}
-                    />
-                  </TouchableOpacity>
-                  <View style={styles.dividerVertical} />
-                  <TouchableOpacity onPress={() => this._pickImage()} style={{ borderStyle: 'dashed', borderWidth: 1, borderRadius: 8, borderColor: Colors.primary, width: 100, height: 100, justifyContent: 'center', alignItems: 'center' }}>
-                    <Ionicons
-                      name='cloud-upload-outline'
-                      size={50}
-                    // alt="upload"
-                    // style={{ width: "50%", alignItems: 'center', height: "50%"}}
-                    />
-                  </TouchableOpacity>
-                </View>
-              )}
-              {this._maybeRenderUploadingOverlay()}
-
-            </View>
-            {/* {this._maybeRenderImage()} */}
-          </View>
-
-          <FormField
-            title="Weight"
-            value={this.state.form.weight}
-            placeholder="The weight of the item"
-            handleChangeText={(e: any) => this.setState(prevState => ({
-              form: {
-                // @ts-ignore
-                ...prevState.form,
-                weight: e
-              }
-            }))}
-            otherStyles={{ marginVertical: 16 }}
-          />
-
-          <View style={[{ flexDirection: 'column', paddingTop: 10, gap: 10 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <MaterialIcons name='flight-takeoff' size={20} />
-              <Text style={{ color: Colors.dark, fontFamily: 'mon-sb' }}>From</Text>
-            </View>
-            <TouchableOpacity style={{ flex: 1 }} onPress={() => {
-              //@ts-ignore
-              this.bottomSheetModalRef.current.present({ input: 'from' })
-            }}>
-
-              <View style={{ height: 50, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: Colors.lightGray, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-
-                {this.state.form.origin ?
-                  <Text style={[(this.state.form.origin ? { color: '#000' } : { color: '#aaa' }), { fontFamily: 'mon-sb' }]}>{this.state.form.origin?.name}</Text>
-                  :
-                  <>
-                    <Ionicons name='locate' size={20} style={{ color: '#aaa', marginRight: 8 }} />
-                    <Text style={{ color: '#aaa', fontFamily: 'mon-sb' }}>Select location from map</Text>
-                  </>
-                }
-
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={{ fontFamily: 'mon-sb', marginVertical: 16 }}>Contact number</Text>
-          <PhoneInput
-            placeholder="Enter phone"
-            phoneInputStyles={{
-              container: {
-                backgroundColor: "#fff",
-                borderWidth: 1,
-                borderColor: Colors.lightGray
-              },
-              flagContainer: {
-                borderTopLeftRadius: 7,
-                borderBottomLeftRadius: 7,
-                alignItems: 'center',
-
-              },
-              flag: {},
-              caret: {
-                fontSize: 16,
-              },
-              divider: {
-                width: 0,
-                backgroundColor: Colors.dark,
-              },
-              callingCode: {},
-              input: {
-
-                color: Colors.dark,
-              },
-            }}
-            modalStyles={{
-              modal: {
-                backgroundColor: "#fff",
-                borderWidth: 0,
-              },
-              divider: {
-                backgroundColor: 'transparent',
-              },
-              searchInput: {
-                borderWidth: 0,
-                borderBottomWidth: 1,
-                borderColor: '#222',
-                color: Colors.dark,
-                paddingHorizontal: 20,
-                height: 50,
-              },
-              countryButton: {
-                backgroundColor: Colors.lightGray,
-                marginVertical: 4,
-                borderWidth: 0,
-              },
-              noCountryText: {},
-              noCountryContainer: {},
-              flag: {
-                color: '#FFFFFF',
-                fontSize: 20,
-              },
-              callingCode: {
-                color: '#222',
-              },
-              countryName: {
-                color: '#222',
-              },
-            }}
-            customCaret={<Ionicons name="chevron-down" size={16} color="#000000" />}
-            // defaultValue="+251994697123"
-            value={this.state.form.originPhoneNumber}
-            defaultCountry="ET"
-            onChangePhoneNumber={(e) => {
-              this.handlephoneNumber(e, true)
-            }}
-            selectedCountry={this.state.form.originCountry}
-            onChangeSelectedCountry={(i) => {
-              this.handleSelectedCountry(i, true)
-            }}
-          />
-          <View style={[defaultStyles.separator, { width: '100%', flex: 1, backgroundColor: Colors.primary, marginTop: 16 }]}></View>
-
-          <View style={[{ flexDirection: 'column', paddingTop: 10, gap: 10 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <MaterialIcons name='flight-land' size={20} />
-              <Text style={{ color: Colors.dark, fontFamily: 'mon-sb' }}>To</Text>
-            </View>
-            <TouchableOpacity onPress={() => {
-              //@ts-ignore
-              this.bottomSheetModalRef.current.present({ input: 'to' })
-            }}>
-
-              <View style={{ height: 50, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: Colors.lightGray, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-
-                {this.state.form.destination ?
-                  <Text style={[(this.state.form.origin ? { color: '#000' } : { color: '#aaa' }), { fontFamily: 'mon-sb' }]}>{this.state.form.destination?.name}</Text>
-                  :
-                  <>
-                    <Ionicons name='locate' size={20} style={{ color: '#aaa', marginRight: 8 }} />
-                    <Text style={{ color: '#aaa', fontFamily: 'mon-sb' }}>Select location from map</Text>
-                  </>
-                }
-
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={{ fontFamily: 'mon-sb', marginVertical: 16 }}>Contact number</Text>
-
-          <PhoneInput
-            placeholder="Enter phone"
-            phoneInputStyles={{
-              container: {
-                backgroundColor: "#fff",
-                borderWidth: 1,
-                borderColor: Colors.lightGray
-              },
-              flagContainer: {
-                borderTopLeftRadius: 7,
-                borderBottomLeftRadius: 7,
-                alignItems: 'center',
-
-              },
-              flag: {},
-              caret: {
-                fontSize: 16,
-              },
-              divider: {
-                width: 0,
-                backgroundColor: Colors.dark,
-              },
-              callingCode: {},
-              input: {
-
-                color: Colors.dark,
-              },
-            }}
-            modalStyles={{
-              modal: {
-                backgroundColor: "#fff",
-                borderWidth: 0,
-              },
-              divider: {
-                backgroundColor: 'transparent',
-              },
-              searchInput: {
-                borderWidth: 0,
-                borderBottomWidth: 1,
-                borderColor: '#222',
-                color: Colors.dark,
-                paddingHorizontal: 20,
-                height: 50,
-              },
-              countryButton: {
-                backgroundColor: Colors.lightGray,
-                marginVertical: 4,
-                borderWidth: 0,
-              },
-              noCountryText: {},
-              noCountryContainer: {},
-              flag: {
-                color: '#FFFFFF',
-                fontSize: 20,
-              },
-              callingCode: {
-                color: '#222',
-              },
-              countryName: {
-                color: '#222',
-              },
-            }}
-            customCaret={<Ionicons name="chevron-down" size={16} color="#000000" />}
-            // defaultValue="+251994697123"
-            value={this.state.form.destinationPhoneNumber}
-            defaultCountry="ET"
-            onChangePhoneNumber={(e) => {
-              this.handlephoneNumber(e, false)
-            }}
-            selectedCountry={this.state.form.destinationCountry}
-            onChangeSelectedCountry={(i) => {
-              this.handleSelectedCountry(i, false)
-            }}
-          />
-
-          <FormField
-            title="Price"
-            value={this.state.form.price}
-            placeholder="How much are you willing pay "
-            handleChangeText={(e: any) => this.setState(prevState => ({
-              form: {
-                // @ts-ignore
-                ...prevState.form,
-                price: e
-              }
-            }))}
-            otherStyles={{ marginVertical: 16 }}
-          />
-
-          <View style={{ marginBottom: 40, marginTop: 10 }}>
+        <ScrollView
+          horizontal
+          ref={this.scrollRef}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            flexGrow: 1,
+            alignItems: 'center',
+            gap: 0,
+            paddingHorizontal: 16,
+          }}
+        >
+          {categories.map((item, index) => (
             <TouchableOpacity
-              style={[defaultStyles.btn, (this.state.uploading && {backgroundColor: Colors.primaryMuted}) , { marginVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: "center" }]}
+              // ref={(el) => (this.itemsRef.current[index] = el)}
+              key={index}
+              style={this.state.activeIndex === index ? styles.categoriesBtnActive : styles.categoriesBtn}
+              onPress={() => this.selectCategory(index)}>
+              {/* <MaterialIcons
+                    name={item.icon as any}
+                    size={24}
+                    color={activeIndex === index ? '#000' : Colors.gray}
+                  /> */}
+              <Text style={this.state.activeIndex === index ? styles.categoryTextActive : styles.categoryText}>
+                {item.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Post Listing */}
+        {this.state.activeIndex == 0 &&
+          <ScrollView keyboardShouldPersistTaps={'handled'} style={{ padding: 16 }}>
+            <Text style={{ fontFamily: 'mon-sb', fontSize: 24, color: Colors.dark }}>Post an item</Text>
+            <Text style={{ fontFamily: 'mon', fontSize: 16, paddingVertical: 10, color: Colors.dark }}>Create a post for an item you would like to send</Text>
+
+            <FormField
+              title="Title"
+              value={form.title}
+              placeholder="Give your post a descriptive title..."
+              handleChangeText={(e: any) => {
+                this.setState(prevState => ({
+                  form: {                   // object that we want to update
+                    // @ts-ignore
+                    ...prevState.form,    // keep all other key-value pairs
+                    title: e       // update the value of specific key
+                  }
+                }))
+              }}
+              otherStyles={{ marginTop: 20 }}
+            />
+
+            <FormField
+              title="Description"
+              value={form.description}
+              placeholder="Add a clear description of the item/s"
+              handleChangeText={(e: any) => {
+                this.setState(prevState => ({
+                  form: {                   // object that we want to update
+                    // @ts-ignore
+                    ...prevState.form,    // keep all other key-value pairs
+                    description: e       // update the value of specific key
+                  }
+                }))
+              }}
+              otherStyles={{ marginTop: 20 }}
+            />
+
+            <Text style={{ color: Colors.dark, fontFamily: 'mon-sb', marginVertical: 16 }}>List of items</Text>
+
+            {this.inputs && this._renderInputs()}
+
+            <TouchableOpacity
+              style={[defaultStyles.btn, { backgroundColor: Colors.primaryMuted, flexDirection: 'row', gap: 6, alignItems: "center", marginTop: 8 }]}
               // onPress={}
               disabled={this.state.uploading}
-              onPress={this.handleSubmit}
-            >
-              <Ionicons name="checkmark" color={"#fff"} size={20} />
-              <Text style={{ fontFamily: 'mon-sb', color: '#fff', fontSize: 16 }}> Submit & Publish</Text>
+              onPress={this.addHandler}>
+              <Ionicons name="add" color={'#fff'} size={20} />
+              <Text style={{ fontFamily: 'mon-sb', color: '#fff' }}>
+                {this.state.inputs.length > 0 ? (
+                  'Add more items'
+                ) : 'Add items'}
+
+              </Text>
             </TouchableOpacity>
-          </View>
-          {/* <StatusBar barStyle="default" /> */}
-        </ScrollView>
+
+            <View style={{ marginTop: 16, flexDirection: 'column', gap: 2 }}>
+              <Text style={{ color: Colors.dark, fontFamily: "mon-sb", marginBottom: 10 }}>
+                Upload a picture of the item
+              </Text>
+
+              {image && (
+                <TouchableOpacity style={{ width: '100%', alignItems: 'center', justifyContent: 'center', position: 'absolute', bottom: 0, zIndex: 1, height: 50, marginBottom: "auto", backgroundColor: 'rgba(0, 0, 0, 0.2)' }} onPress={() => this.setState({ image: "" })}>
+                  <Ionicons name="close" size={32} color="#fff" />
+                </TouchableOpacity>
+              )}
+
+              <View style={{ height: 200, paddingHorizontal: 4, backgroundColor: Colors.lightGray, borderRadius: 10, borderColor: Colors.primary, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                {!!image ? (
+                  <Image
+                    source={{ uri: image }}
+                    style={{ width: "100%", height: 200, borderRadius: 10 }}
+                    resizeMode='contain'
+                  />
+                ) : (
+                  <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => this._takePhoto()} style={{ borderStyle: 'dashed', borderWidth: 1, borderRadius: 8, borderColor: Colors.primary, width: 100, height: 100, justifyContent: 'center', alignItems: 'center' }}>
+                      <Ionicons
+                        name='camera-outline'
+                        size={50}
+                      // alt="upload"
+                      // style={{ width: "50%", alignItems: 'center', height: "50%"}}
+                      />
+                    </TouchableOpacity>
+                    <View style={styles.dividerVertical} />
+                    <TouchableOpacity onPress={() => this._pickImage()} style={{ borderStyle: 'dashed', borderWidth: 1, borderRadius: 8, borderColor: Colors.primary, width: 100, height: 100, justifyContent: 'center', alignItems: 'center' }}>
+                      <Ionicons
+                        name='cloud-upload-outline'
+                        size={50}
+                      // alt="upload"
+                      // style={{ width: "50%", alignItems: 'center', height: "50%"}}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {this._maybeRenderUploadingOverlay()}
+
+              </View>
+              {/* {this._maybeRenderImage()} */}
+            </View>
+
+            <FormField
+              title="Weight"
+              value={this.state.form.weight}
+              placeholder="The weight of the item"
+              handleChangeText={(e: any) => this.setState(prevState => ({
+                form: {
+                  // @ts-ignore
+                  ...prevState.form,
+                  weight: e
+                }
+              }))}
+              otherStyles={{ marginVertical: 16 }}
+            />
+
+            <View style={[{ flexDirection: 'column', paddingTop: 10, gap: 10 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <MaterialIcons name='flight-takeoff' size={20} />
+                <Text style={{ color: Colors.dark, fontFamily: 'mon-sb' }}>From</Text>
+              </View>
+              <TouchableOpacity style={{ flex: 1 }} onPress={() => {
+                //@ts-ignore
+                this.bottomSheetModalRef.current.present({ input: 'from' })
+              }}>
+
+                <View style={{ height: 50, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: Colors.lightGray, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+
+                  {this.state.form.origin ?
+                    <Text style={[(this.state.form.origin ? { color: '#000' } : { color: '#aaa' }), { fontFamily: 'mon-sb' }]}>{this.state.form.origin?.name}</Text>
+                    :
+                    <>
+                      <Ionicons name='locate' size={20} style={{ color: '#aaa', marginRight: 8 }} />
+                      <Text style={{ color: '#aaa', fontFamily: 'mon-sb' }}>Select location from map</Text>
+                    </>
+                  }
+
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ fontFamily: 'mon-sb', marginVertical: 16 }}>Contact number</Text>
+            <PhoneInput
+              placeholder="Enter phone"
+              phoneInputStyles={{
+                container: {
+                  backgroundColor: "#fff",
+                  borderWidth: 1,
+                  borderColor: Colors.lightGray
+                },
+                flagContainer: {
+                  borderTopLeftRadius: 7,
+                  borderBottomLeftRadius: 7,
+                  alignItems: 'center',
+
+                },
+                flag: {},
+                caret: {
+                  fontSize: 16,
+                },
+                divider: {
+                  width: 0,
+                  backgroundColor: Colors.dark,
+                },
+                callingCode: {},
+                input: {
+
+                  color: Colors.dark,
+                },
+              }}
+              modalStyles={{
+                modal: {
+                  backgroundColor: "#fff",
+                  borderWidth: 0,
+                },
+                divider: {
+                  backgroundColor: 'transparent',
+                },
+                searchInput: {
+                  borderWidth: 0,
+                  borderBottomWidth: 1,
+                  borderColor: '#222',
+                  color: Colors.dark,
+                  paddingHorizontal: 20,
+                  height: 50,
+                },
+                countryButton: {
+                  backgroundColor: Colors.lightGray,
+                  marginVertical: 4,
+                  borderWidth: 0,
+                },
+                noCountryText: {},
+                noCountryContainer: {},
+                flag: {
+                  color: '#FFFFFF',
+                  fontSize: 20,
+                },
+                callingCode: {
+                  color: '#222',
+                },
+                countryName: {
+                  color: '#222',
+                },
+              }}
+              customCaret={<Ionicons name="chevron-down" size={16} color="#000000" />}
+              // defaultValue="+251994697123"
+              value={this.state.form.originPhoneNumber}
+              defaultCountry="ET"
+              onChangePhoneNumber={(e) => {
+                this.handlephoneNumber(e, true)
+              }}
+              selectedCountry={this.state.form.originCountry}
+              onChangeSelectedCountry={(i) => {
+                this.handleSelectedCountry(i, true)
+              }}
+            />
+            <View style={[defaultStyles.separator, { width: '100%', flex: 1, backgroundColor: Colors.primary, marginTop: 16 }]}></View>
+
+            <View style={[{ flexDirection: 'column', paddingTop: 10, gap: 10 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <MaterialIcons name='flight-land' size={20} />
+                <Text style={{ color: Colors.dark, fontFamily: 'mon-sb' }}>To</Text>
+              </View>
+              <TouchableOpacity onPress={() => {
+                //@ts-ignore
+                this.bottomSheetModalRef.current.present({ input: 'to' })
+              }}>
+
+                <View style={{ height: 50, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: Colors.lightGray, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+
+                  {this.state.form.destination ?
+                    <Text style={[(this.state.form.origin ? { color: '#000' } : { color: '#aaa' }), { fontFamily: 'mon-sb' }]}>{this.state.form.destination?.name}</Text>
+                    :
+                    <>
+                      <Ionicons name='locate' size={20} style={{ color: '#aaa', marginRight: 8 }} />
+                      <Text style={{ color: '#aaa', fontFamily: 'mon-sb' }}>Select location from map</Text>
+                    </>
+                  }
+
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ fontFamily: 'mon-sb', marginVertical: 16 }}>Contact number</Text>
+
+            <PhoneInput
+              placeholder="Enter phone"
+              phoneInputStyles={{
+                container: {
+                  backgroundColor: "#fff",
+                  borderWidth: 1,
+                  borderColor: Colors.lightGray
+                },
+                flagContainer: {
+                  borderTopLeftRadius: 7,
+                  borderBottomLeftRadius: 7,
+                  alignItems: 'center',
+
+                },
+                flag: {},
+                caret: {
+                  fontSize: 16,
+                },
+                divider: {
+                  width: 0,
+                  backgroundColor: Colors.dark,
+                },
+                callingCode: {},
+                input: {
+
+                  color: Colors.dark,
+                },
+              }}
+              modalStyles={{
+                modal: {
+                  backgroundColor: "#fff",
+                  borderWidth: 0,
+                },
+                divider: {
+                  backgroundColor: 'transparent',
+                },
+                searchInput: {
+                  borderWidth: 0,
+                  borderBottomWidth: 1,
+                  borderColor: '#222',
+                  color: Colors.dark,
+                  paddingHorizontal: 20,
+                  height: 50,
+                },
+                countryButton: {
+                  backgroundColor: Colors.lightGray,
+                  marginVertical: 4,
+                  borderWidth: 0,
+                },
+                noCountryText: {},
+                noCountryContainer: {},
+                flag: {
+                  color: '#FFFFFF',
+                  fontSize: 20,
+                },
+                callingCode: {
+                  color: '#222',
+                },
+                countryName: {
+                  color: '#222',
+                },
+              }}
+              customCaret={<Ionicons name="chevron-down" size={16} color="#000000" />}
+              // defaultValue="+251994697123"
+              value={this.state.form.destinationPhoneNumber}
+              defaultCountry="ET"
+              onChangePhoneNumber={(e) => {
+                this.handlephoneNumber(e, false)
+              }}
+              selectedCountry={this.state.form.destinationCountry}
+              onChangeSelectedCountry={(i) => {
+                this.handleSelectedCountry(i, false)
+              }}
+            />
+
+            <FormField
+              title="Price"
+              value={this.state.form.price}
+              placeholder="How much are you willing pay "
+              handleChangeText={(e: any) => this.setState(prevState => ({
+                form: {
+                  // @ts-ignore
+                  ...prevState.form,
+                  price: e
+                }
+              }))}
+              otherStyles={{ marginVertical: 16 }}
+            />
+
+            <View style={{ marginBottom: 40, marginTop: 10 }}>
+              <TouchableOpacity
+                style={[defaultStyles.btn, (this.state.uploading && { backgroundColor: Colors.primaryMuted }), { marginVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: "center" }]}
+                // onPress={}
+                disabled={this.state.uploading}
+                onPress={this.handleSubmit}
+              >
+                <Ionicons name="checkmark" color={"#fff"} size={20} />
+                <Text style={{ fontFamily: 'mon-sb', color: '#fff', fontSize: 16 }}> Submit & Publish</Text>
+              </TouchableOpacity>
+            </View>
+            {/* <StatusBar barStyle="default" /> */}
+          </ScrollView>
+        }
+
+        {/* Post flight */}
+        {this.state.activeIndex == 1 &&
+          <ScrollView keyboardShouldPersistTaps={'handled'} style={{ padding: 16 }}>
+            <Text style={{ fontFamily: 'mon-sb', fontSize: 24, color: Colors.dark }}>Post a flight</Text>
+            <Text style={{ fontFamily: 'mon', fontSize: 16, paddingVertical: 10, color: Colors.dark }}>Create a post for your next flight</Text>
+
+            <View style={[{ flexDirection: 'column', paddingTop: 10, gap: 10 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <MaterialIcons name='flight-takeoff' size={20} />
+                <Text style={{ color: Colors.dark, fontFamily: 'mon-sb' }}>From</Text>
+              </View>
+              <TouchableOpacity style={{ flex: 1 }} onPress={() => {
+                //@ts-ignore
+                this.bottomSheetModalRef.current.present({ input: 'flightFrom' })
+              }}>
+
+                <View style={{ height: 50, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: Colors.lightGray, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+
+                  {this.state.form.origin ?
+                    <Text style={[(this.state.form.origin ? { color: '#000' } : { color: '#aaa' }), { fontFamily: 'mon-sb' }]}>{this.state.form.origin?.name}</Text>
+                    :
+                    <>
+                      <Ionicons name='locate' size={20} style={{ color: '#aaa', marginRight: 8 }} />
+                      <Text style={{ color: '#aaa', fontFamily: 'mon-sb' }}>Select location</Text>
+                    </>
+                  }
+
+                </View>
+              </TouchableOpacity>
+            </View>
+
+
+            <View style={[{ flexDirection: 'column', paddingTop: 10, gap: 10 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <MaterialIcons name='flight-land' size={20} />
+                <Text style={{ color: Colors.dark, fontFamily: 'mon-sb' }}>To</Text>
+              </View>
+              <TouchableOpacity onPress={() => {
+                //@ts-ignore
+                this.bottomSheetModalRef.current.present({ input: 'flightTo' })
+              }}>
+
+                <View style={{ height: 50, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: Colors.lightGray, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+
+                  {this.state.form.destination ?
+                    <Text style={[(this.state.form.origin ? { color: '#000' } : { color: '#aaa' }), { fontFamily: 'mon-sb' }]}>{this.state.form.destination?.name}</Text>
+                    :
+                    <>
+                      <Ionicons name='locate' size={20} style={{ color: '#aaa', marginRight: 8 }} />
+                      <Text style={{ color: '#aaa', fontFamily: 'mon-sb' }}>Select location </Text>
+                    </>
+                  }
+
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            {/* <Text style={{ color: Colors.dark, fontFamily: 'mon-sb', marginVertical: 16 }}>Layovers</Text>
+            <Text style={{ fontFamily: 'mon', fontSize: 16, paddingVertical: 10, color: Colors.dark }}>Does your flight have any layovers or stops</Text>
+
+
+            {this.inputs && this._renderInputs()}
+
+            <TouchableOpacity
+              style={[defaultStyles.btn, { backgroundColor: Colors.primaryMuted, flexDirection: 'row', gap: 6, alignItems: "center", marginTop: 8 }]}
+              // onPress={}
+              disabled={this.state.uploading}
+              onPress={this.addHandler}>
+              <Ionicons name="add" color={'#fff'} size={20} />
+              <Text style={{ fontFamily: 'mon-sb', color: '#fff' }}>
+                {this.state.inputs.length > 0 ? (
+                  'Add more stops'
+                ) : 'Add stops'}
+
+              </Text>
+            </TouchableOpacity> */}
+
+            <FormField
+              title="Maximum Weight allowed"
+              value={this.state.form.weight}
+              placeholder="Max weight allowed on your flight"
+              handleChangeText={(e: any) => this.setState(prevState => ({
+                form: {
+                  // @ts-ignore
+                  ...prevState.form,
+                  weight: e
+                }
+              }))}
+              otherStyles={{ marginTop: 16 }}
+            />
+
+            <FormField
+              title="Date of departure"
+              value={this.state.form.weight}
+              placeholder="When does your flight depart"
+              handleChangeText={(e: any) => this.setState(prevState => ({
+                form: {
+                  // @ts-ignore
+                  ...prevState.form,
+                  weight: e
+                }
+              }))}
+              otherStyles={{ marginTop: 16 }}
+            />
+
+
+            <FormField
+              title="Date of arrival"
+              value={this.state.form.weight}
+              placeholder="When does your flight land"
+              handleChangeText={(e: any) => this.setState(prevState => ({
+                form: {
+                  // @ts-ignore
+                  ...prevState.form,
+                  weight: e
+                }
+              }))}
+              otherStyles={{ marginTop: 16 }}
+            />
+
+
+            <Text style={{ fontFamily: 'mon-sb', marginVertical: 16 }}>Contact number</Text>
+            <PhoneInput
+              placeholder="Enter phone"
+              phoneInputStyles={{
+                container: {
+                  backgroundColor: "#fff",
+                  borderWidth: 1,
+                  borderColor: Colors.lightGray
+                },
+                flagContainer: {
+                  borderTopLeftRadius: 7,
+                  borderBottomLeftRadius: 7,
+                  alignItems: 'center',
+
+                },
+                flag: {},
+                caret: {
+                  fontSize: 16,
+                },
+                divider: {
+                  width: 0,
+                  backgroundColor: Colors.dark,
+                },
+                callingCode: {},
+                input: {
+
+                  color: Colors.dark,
+                },
+              }}
+              modalStyles={{
+                modal: {
+                  backgroundColor: "#fff",
+                  borderWidth: 0,
+                },
+                divider: {
+                  backgroundColor: 'transparent',
+                },
+                searchInput: {
+                  borderWidth: 0,
+                  borderBottomWidth: 1,
+                  borderColor: '#222',
+                  color: Colors.dark,
+                  paddingHorizontal: 20,
+                  height: 50,
+                },
+                countryButton: {
+                  backgroundColor: Colors.lightGray,
+                  marginVertical: 4,
+                  borderWidth: 0,
+                },
+                noCountryText: {},
+                noCountryContainer: {},
+                flag: {
+                  color: '#FFFFFF',
+                  fontSize: 20,
+                },
+                callingCode: {
+                  color: '#222',
+                },
+                countryName: {
+                  color: '#222',
+                },
+              }}
+              customCaret={<Ionicons name="chevron-down" size={16} color="#000000" />}
+              // defaultValue="+251994697123"
+              value={this.state.form.originPhoneNumber}
+              defaultCountry="ET"
+              onChangePhoneNumber={(e) => {
+                this.handlephoneNumber(e, true)
+              }}
+              selectedCountry={this.state.form.originCountry}
+              onChangeSelectedCountry={(i) => {
+                this.handleSelectedCountry(i, true)
+              }}
+            />
+
+
+            {/* <FormField
+              title="Price"
+              value={this.state.form.price}
+              placeholder="How much are you willing pay "
+              handleChangeText={(e: any) => this.setState(prevState => ({
+                form: {
+                  // @ts-ignore
+                  ...prevState.form,
+                  price: e
+                }
+              }))}
+              otherStyles={{ marginVertical: 16 }}
+            /> */}
+            <View style={[defaultStyles.separator, { width: '100%', flex: 1, backgroundColor: Colors.gray, marginTop: 16 }]}></View>
+
+            <View style={{ marginBottom: 40, marginTop: 10 }}>
+              <TouchableOpacity
+                style={[defaultStyles.btn, (this.state.uploading && { backgroundColor: Colors.primaryMuted }), { marginVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: "center" }]}
+                // onPress={}
+                disabled={this.state.uploading}
+                onPress={this.handleSubmit}
+              >
+                <Ionicons name="checkmark" color={"#fff"} size={20} />
+                <Text style={{ fontFamily: 'mon-sb', color: '#fff', fontSize: 16 }}> Submit & Publish</Text>
+              </TouchableOpacity>
+            </View>
+            {/* <StatusBar barStyle="default" /> */}
+          </ScrollView>
+        }
+
         <View style={styles.container}>
 
           <BottomSheetModal
@@ -1298,4 +1627,39 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    // marginBottom: 8,
+  },
+  categoryText: {
+    fontSize: 14,
+    fontFamily: 'mon-sb',
+    color: Colors.gray,
+  },
+  categoryTextActive: {
+    fontSize: 14,
+    fontFamily: 'mon-sb',
+    color: '#000',
+  },
+  categoriesBtn: {
+    flex: 1,
+    // backgroundColor: Colors.lightGray,
+    // borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 5,
+  },
+  categoriesBtnActive: {
+    // backgroundColor: Colors.primary,
+    borderBottomColor: Colors.primary,
+    borderBottomWidth: 4,
+    padding: 5,
+    // borderRadius: 15,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
 });
