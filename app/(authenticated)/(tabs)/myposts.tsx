@@ -280,7 +280,7 @@ const Page = () => {
 
                       <View style={{ backgroundColor: '#FFE000', borderRadius: 25, padding: 2, width: 100, alignItems: 'center', flexDirection: 'row' }}>
                         <View style={{ gap: 4, alignItems: 'center' }}>
-                          {item.paymentVerified ? (<><Text>verified</Text><Ionicons name='checkmark-circle' color={Colors.primary} /></>) : (<View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><Ionicons name='hourglass' size={16} /><Text style={{ fontFamily: "mon" }}>pending</Text></View>)}
+                          {item.paymentStatus == "verified" ? (<><Text>verified</Text><Ionicons name='checkmark-circle' color={Colors.primary} /></>) : (<View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><Ionicons name='hourglass' size={16} /><Text style={{ fontFamily: "mon" }}>pending</Text></View>)}
                         </View>
                       </View>
                     </View>

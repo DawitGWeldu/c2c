@@ -13,6 +13,12 @@ export const defaultStyles = StyleSheet.create({
     height: hp("35"),
     paddingHorizontal: 16,
   },
+  dividerVertical: {
+    width: StyleSheet.hairlineWidth,
+    height: 15,
+    backgroundColor: Colors.gray,
+    marginHorizontal: 6,
+  },
   inputField: {
     height: 44,
     borderWidth: 1,

@@ -5,12 +5,13 @@ import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import ModalHeaderText from '@/components/ModalHeaderText';
-import { TouchableOpacity, SafeAreaView, useColorScheme, Text, View, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, SafeAreaView, useColorScheme, Text, View, ActivityIndicator,StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Buffer } from 'buffer';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import axios from 'axios'
 
 //@ts-ignore
 navigator.geolocation = require('@react-native-community/geolocation');
@@ -126,7 +127,7 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
-  const { authState, onLogout } = useAuth()
+  const { authState, apiAvailable, onLogout } = useAuth()
   const rootNavigationState = useRootNavigationState()
   const phoneVerified = authState?.phone_verified
 
@@ -175,53 +176,65 @@ function RootLayoutNav() {
     }
   }, [loaded]);
 
+  // useEffect(() => {
+    
+  //   if (apiAvailable == false) {
+  //     { console.log("AuthContext, apiAvailable ", apiAvailable) }
+  //     router.push('/apiError')
+  //   }
+  // }, [apiAvailable]);
+
+
+
 
   useEffect(() => {
     const inAuthGroup = segments[0] === '(authenticated)';
 
     const loadToken = async () => {
       const token = await SecureStore.getItemAsync(TOKEN_KEY)
-
-      if (token) {
-        const decodedToken = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
-
-        if (Date.now() > (decodedToken.exp * 1000)) {
-
-          setTimeout(() => {
-            Toast.show({
-              type: 'info',
-              text1: "Session expired",
-              text2: "Please, login again"
-            });
-          }, 2000);
-          await SecureStore.deleteItemAsync(TOKEN_KEY)
-          router.replace('/login');
-        } else {
-          if (authState?.authenticated && !inAuthGroup) {
-            if (authState.phone_verified) {
-              router.replace('/(authenticated)/(tabs)');
-            }
-            else {
-              router.push({
-                pathname: '/verify/[phone]',
-                params: { phone: "+251994697123", signin: 'true' },
+      if(apiAvailable){
+        if (token) {
+          const decodedToken = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
+          
+          if (Date.now() > (decodedToken.exp * 1000)) {
+  
+            setTimeout(() => {
+              Toast.show({
+                type: 'info',
+                text1: "Session expired",
+                text2: "Please, login again"
               });
+            }, 2000);
+            await SecureStore.deleteItemAsync(TOKEN_KEY)
+            router.replace('/login');
+          } else {
+            if (authState?.authenticated && !inAuthGroup) {
+              if (authState.phone_verified) {
+                router.replace('/(authenticated)/(tabs)');
+              }
+              else {
+                router.push({
+                  pathname: '/verify/[phone]',
+                  params: { phone: "+251994697123", signin: 'true' },
+                });
+              }
+            } else if (!authState?.authenticated) {
+              router.replace('/');
+              
             }
-          } else if (!authState?.authenticated) {
-            router.replace('/');
           }
+        } else {
+          router.replace('/');
         }
       } else {
-        router.replace('/');
+        router.replace('/apiError');
       }
-
-
     }
     loadToken()
 
 
 
-  }, [authState?.authenticated, authState?.phone_verified]);
+  }, [authState?.authenticated, authState?.phone_verified, apiAvailable]);
 
 
 
@@ -269,6 +282,7 @@ function RootLayoutNav() {
       />
 
       <Stack.Screen name="help" options={{ title: 'Help', presentation: 'modal' }} />
+      <Stack.Screen name="apiError" options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen name="(modals)/CountrySelect" options={{ title: 'Select Country', presentation: 'modal' }} />
 
       <Stack.Screen

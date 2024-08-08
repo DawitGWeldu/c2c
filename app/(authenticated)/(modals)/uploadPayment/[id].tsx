@@ -123,9 +123,7 @@ const Page = () => {
 
 
   const handleSubmit = async () => {
-
     setSubmitting(true)
-
     try {
       await _uploadImagePicked(image)
       //@ts-ignore
